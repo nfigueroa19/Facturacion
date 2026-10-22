@@ -5,6 +5,9 @@
     "acceso.campo-identificacion": "Número de identificación",
     "acceso.campo-id-acceso": "ID de acceso",
     "acceso.ayuda": "El ID de acceso llega por SMS cuando se asigna la cita.",
+    "acceso.dato-obligatorio": "Escriba este dato para ingresar.",
+    "acceso.boton": "Ingresar",
+    "acceso.servicio-pendiente": "Versión de prueba: el ingreso todavía no consulta las citas. Sus datos no se enviaron.",
     "soportes.instruccion": "Adjunte la autorización y la orden médica en PDF."
   },
   "imagenes": {

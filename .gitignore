@@ -4,6 +4,8 @@ build/
 .idea/
 *.iml
 *.log
+node_modules/
+dist/
 
 # Secretos: nunca en el repositorio, ni cifrados.
 *.p12

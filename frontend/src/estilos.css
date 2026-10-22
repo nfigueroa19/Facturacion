@@ -1,0 +1,172 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+@import "@fontsource-variable/dm-sans";
+
+/*
+ * Tokens de DESIGN.md (secciones 2 y 10) aplicados al tema de HeroUI.
+ * HeroUI ya publica --color-surface, --color-border, --color-accent, --color-danger y --color-focus
+ * a partir de estas variables, así que aquí se reasignan sus valores en vez de redefinir esos nombres.
+ */
+:root {
+  --background: #ffffff;
+  --foreground: #1b1f24;
+  --surface: #ffffff;
+  --surface-secondary: #f4f6f3;
+  --overlay: #ffffff;
+  --muted: #4a5059;
+  --border: #d5d9d2;
+  --separator: #d5d9d2;
+
+  --accent: #1e5520;
+  --accent-foreground: #ffffff;
+  --accent-hover: #1a4d1c;
+  --focus: #13235b;
+  --link: #1e5520;
+
+  --danger: #8a1c1c;
+  --danger-foreground: #ffffff;
+  --danger-soft: #fce8e8;
+  --danger-soft-foreground: #8a1c1c;
+
+  --field-background: #ffffff;
+  --field-foreground: #1b1f24;
+  --field-placeholder: #4a5059;
+  --field-border: #7d837a;
+  --field-border-width: 1px;
+  --field-border-hover: #3d434b;
+  --field-border-focus: #13235b;
+  --field-focus: #ffffff;
+
+  /* Radio único de 6 px: --radius-lg y --radius-field de HeroUI quedan en 6 px. */
+  --radius: 6px;
+  --field-radius: 6px;
+
+  /* Superficies planas; solo la capa flotante lleva sombra (DESIGN.md, sección 4). */
+  --surface-shadow: none;
+  --field-shadow: none;
+  --overlay-shadow: 0 4px 16px rgb(19 35 91 / 0.12);
+
+  --skeleton-animation: pulse;
+}
+
+@theme {
+  --color-brand-green-light: #7ab51d;
+  --color-brand-green-dark: #2b722a;
+  --color-brand-navy: #13235b;
+
+  --color-ink: #1b1f24;
+  --color-ink-muted: #3d434b;
+  --color-ink-subtle: #4a5059;
+  --color-border-control: #7d837a;
+  --color-action: #1e5520;
+  --color-action-hover: #1a4d1c;
+  --color-focus-ring: #13235b;
+
+  --color-state-radicado-fg: #1d3f8f;
+  --color-state-radicado-bg: #e6ecf8;
+  --color-state-pendiente-fg: #6b4500;
+  --color-state-pendiente-bg: #fff4d6;
+  --color-state-aprobado-fg: #1e5520;
+  --color-state-aprobado-bg: #e8f3da;
+  --color-state-listo-fg: #13235b;
+  --color-state-listo-bg: #e6ecf8;
+  --color-state-facturado-fg: #ffffff;
+  --color-state-facturado-bg: #1e5520;
+  --color-state-anulado-fg: #4a4f57;
+  --color-state-anulado-bg: #eef0f2;
+  --color-danger-fg: #8a1c1c;
+  --color-danger-bg: #fce8e8;
+
+  --font-sans: "DM Sans Variable", system-ui, sans-serif;
+  --ease-state: cubic-bezier(0, 0, 0.2, 1);
+  --duration-state: 200ms;
+}
+
+/* Franja de identidad del manual: bloques de los dos verdes institucionales bajo el encabezado. */
+@utility franja-identidad {
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--color-brand-green-dark) 0 9%,
+    var(--color-brand-green-light) 9% 15%,
+    var(--color-brand-green-dark) 15% 18%,
+    var(--color-brand-green-light) 18% 31%,
+    var(--color-brand-green-dark) 31% 38%,
+    var(--color-brand-green-light) 38% 52%,
+    var(--color-brand-green-dark) 52% 55%,
+    var(--color-brand-green-light) 55% 68%,
+    var(--color-brand-green-dark) 68% 77%,
+    var(--color-brand-green-light) 77% 90%,
+    var(--color-brand-green-dark) 90% 100%
+  );
+}
+
+/* HeroUI redondea los botones como pastilla; DESIGN.md fija 6 px para todo control. */
+.button {
+  border-radius: var(--radius);
+  /* MOTION 1: hover y presión en 150 ms ease-out (HeroUI trae 100 ms de color y 250 ms de escala). */
+  transition:
+    transform 150ms var(--ease-state),
+    background-color 150ms var(--ease-state),
+    box-shadow 150ms var(--ease-state);
+}
+
+/* El borde del botón secundario delimita un control: usa border-control (3,89:1, WCAG 1.4.11). */
+.button--outline {
+  border-color: var(--color-border-control);
+}
+
+/* HeroUI oculta la ayuda del campo cuando hay error; el paciente la necesita justo en ese momento. */
+.textfield[data-invalid="true"] [data-slot="description"] {
+  display: block;
+}
+
+/* Avisos con el radio único y los colores de DESIGN.md; HeroUI los trae flotantes y muy redondeados. */
+.alert {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface-secondary);
+}
+
+.alert--danger {
+  border-color: var(--color-danger-fg);
+  background-color: var(--color-danger-bg);
+}
+
+.alert__title,
+.alert__description {
+  font-size: var(--text-base);
+}
+
+.alert--danger .alert__description {
+  color: var(--color-danger-fg);
+}
+
+/* Única entrada animada: el contenido reemplaza al esqueleto cuando llegan los textos del backend. */
+@utility aparicion-estado {
+  animation: aparicion-estado var(--duration-state) var(--ease-state);
+}
+
+@keyframes aparicion-estado {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --skeleton-animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
