@@ -57,7 +57,7 @@ Los nombres salen de `_Segundo_Cerebro/01_Requerimientos/estados-prefactura.md`.
 
 | Estado del dominio | Equivale a | Texto | Fondo | Contraste |
 |--------------------|-----------|-------|-------|-----------|
-| RADICADO (nombre provisional, P-04) | En revisión | `#1D3F8F` | `#E6ECF8` | 8,20:1 |
+| EN_REVISION (P-04) | En revisión | `#1D3F8F` | `#E6ECF8` | 8,20:1 |
 | PENDIENTE | Pendiente (tiene novedades) | `#6B4500` | `#FFF4D6` | 7,74:1 |
 | APROBADO | Aprobado | `#1E5520` | `#E8F3DA` | 7,69:1 |
 | LISTO PARA FACTURAR | Aprobado y con llegada confirmada | `#13235B` | `#E6ECF8` con borde `#13235B` | 12,48:1 |

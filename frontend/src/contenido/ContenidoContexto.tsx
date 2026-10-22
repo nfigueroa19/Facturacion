@@ -48,3 +48,10 @@ export function useContenido(): Contenido {
 export function textoDe(textos: Textos, clave: string): string {
   return textos[clave] ?? `[${clave}]`;
 }
+
+export type Texto = (clave: string) => string;
+
+export const lectorDe =
+  (textos: Textos): Texto =>
+  (clave) =>
+    textoDe(textos, clave);

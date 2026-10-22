@@ -2,10 +2,10 @@ package com.hospital.facturacion.domain.prefactura
 
 /**
  * Estados del diagrama del facturador (reunión del 2026-10-21).
- * RADICADO es el nombre provisional del estado inicial mientras se responde la pregunta P-04.
+ * EN_REVISION es el estado entre el envío del paciente y la revisión del facturador (P-04, confirmado 2026-10-22).
  */
 enum class EstadoPrefactura {
-    RADICADO,
+    EN_REVISION,
     PENDIENTE,
     APROBADO,
     INGRESO_ANULADO,
@@ -16,8 +16,8 @@ enum class EstadoPrefactura {
 
     private companion object {
         val TRANSICIONES = mapOf(
-            RADICADO to setOf(PENDIENTE, APROBADO),
-            PENDIENTE to setOf(RADICADO),
+            EN_REVISION to setOf(PENDIENTE, APROBADO),
+            PENDIENTE to setOf(EN_REVISION),
             APROBADO to setOf(INGRESO_ANULADO, LISTO_PARA_FACTURAR),
             LISTO_PARA_FACTURAR to setOf(FACTURADO),
             INGRESO_ANULADO to emptySet(),

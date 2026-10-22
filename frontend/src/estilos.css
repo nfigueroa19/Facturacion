@@ -142,6 +142,28 @@
   color: var(--color-danger-fg);
 }
 
+/* Casillas del checklist: HeroUI las dibuja con un borde translúcido que no llega a 3:1 (WCAG 1.4.11). */
+.checkbox__control {
+  border: 1px solid var(--color-border-control);
+}
+
+.checkbox[data-selected="true"] .checkbox__control {
+  border-color: var(--color-action);
+  background-color: var(--color-action);
+  color: #ffffff;
+}
+
+/* Confirmaciones con el verde de "Aprobado" (7,69:1), no con el verde propio de HeroUI. */
+.alert--success {
+  border-color: var(--color-state-aprobado-fg);
+  background-color: var(--color-state-aprobado-bg);
+}
+
+.alert--success .alert__description,
+.alert--success .alert__indicator {
+  color: var(--color-state-aprobado-fg);
+}
+
 /* Única entrada animada: el contenido reemplaza al esqueleto cuando llegan los textos del backend. */
 @utility aparicion-estado {
   animation: aparicion-estado var(--duration-state) var(--ease-state);

@@ -1,0 +1,11 @@
+[
+  { "clave": "nombres-apellidos", "etiqueta": "Nombres y apellidos", "tipo": "TEXTO" },
+  { "clave": "fecha-nacimiento", "etiqueta": "Fecha de nacimiento", "tipo": "FECHA" },
+  { "clave": "nombre-padre", "etiqueta": "Nombre del padre", "tipo": "TEXTO" },
+  { "clave": "nombre-madre", "etiqueta": "Nombre de la madre", "tipo": "TEXTO" },
+  { "clave": "eps", "etiqueta": "EPS", "tipo": "TEXTO", "ayuda": "La entidad que autorizó la cita." },
+  { "clave": "celular", "etiqueta": "Celular", "tipo": "TELEFONO" },
+  { "clave": "correo", "etiqueta": "Correo electrónico", "tipo": "CORREO", "obligatorio": false },
+  { "clave": "direccion", "etiqueta": "Dirección de residencia", "tipo": "TEXTO" },
+  { "clave": "municipio", "etiqueta": "Municipio de residencia", "tipo": "TEXTO" }
+]

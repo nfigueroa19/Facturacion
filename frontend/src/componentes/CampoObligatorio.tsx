@@ -5,15 +5,18 @@ interface Props {
   readonly etiqueta: string;
   readonly mensajeVacio: string;
   readonly ayuda?: string;
+  readonly tipo?: "text" | "password";
+  readonly autoComplete?: string;
 }
 
 /** Campo de texto con etiqueta visible; el error se asocia al campo y lo anuncia el lector de pantalla. */
-export function CampoObligatorio({ nombre, etiqueta, mensajeVacio, ayuda }: Props) {
+export function CampoObligatorio({ nombre, etiqueta, mensajeVacio, ayuda, tipo = "text", autoComplete = "off" }: Props) {
   return (
     <TextField
       name={nombre}
+      type={tipo}
       isRequired
-      autoComplete="off"
+      autoComplete={autoComplete}
       validate={(valor) => (valor.trim() === "" ? mensajeVacio : null)}
       className="flex flex-col gap-2"
     >

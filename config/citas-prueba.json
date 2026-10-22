@@ -1,0 +1,31 @@
+[
+  {
+    "id": "cita-prueba-001",
+    "identificacion": "1000000001",
+    "codigoAcceso": "PRUEBA1",
+    "diasDesdeHoy": 0,
+    "medico": "Médico de prueba Uno",
+    "especialidad": "Especialidad de prueba",
+    "regimen": "CONTRIBUTIVO",
+    "copagoPesos": 5000
+  },
+  {
+    "id": "cita-prueba-002",
+    "identificacion": "1000000002",
+    "codigoAcceso": "PRUEBA2",
+    "diasDesdeHoy": 1,
+    "medico": "Médica de prueba Dos",
+    "especialidad": "Especialidad de prueba",
+    "regimen": "SUBSIDIADO"
+  },
+  {
+    "id": "cita-prueba-003",
+    "identificacion": "1000000003",
+    "codigoAcceso": "PRUEBA3",
+    "diasDesdeHoy": 2,
+    "medico": "Médico de prueba Tres",
+    "especialidad": "Especialidad de prueba",
+    "regimen": "CONTRIBUTIVO",
+    "copagoPesos": 5000
+  }
+]

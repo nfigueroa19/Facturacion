@@ -1,18 +1,18 @@
 package com.hospital.facturacion.domain.prefactura
 
 import com.hospital.facturacion.domain.prefactura.EstadoPrefactura.APROBADO
+import com.hospital.facturacion.domain.prefactura.EstadoPrefactura.EN_REVISION
 import com.hospital.facturacion.domain.prefactura.EstadoPrefactura.FACTURADO
 import com.hospital.facturacion.domain.prefactura.EstadoPrefactura.INGRESO_ANULADO
 import com.hospital.facturacion.domain.prefactura.EstadoPrefactura.LISTO_PARA_FACTURAR
 import com.hospital.facturacion.domain.prefactura.EstadoPrefactura.PENDIENTE
-import com.hospital.facturacion.domain.prefactura.EstadoPrefactura.RADICADO
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class EstadoPrefacturaTest {
     private val diagramaFacturador = mapOf(
-        RADICADO to setOf(PENDIENTE, APROBADO),
-        PENDIENTE to setOf(RADICADO),
+        EN_REVISION to setOf(PENDIENTE, APROBADO),
+        PENDIENTE to setOf(EN_REVISION),
         APROBADO to setOf(INGRESO_ANULADO, LISTO_PARA_FACTURAR),
         LISTO_PARA_FACTURAR to setOf(FACTURADO),
     )

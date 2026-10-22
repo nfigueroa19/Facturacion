@@ -7,6 +7,7 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.application.log
+import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
@@ -39,12 +40,20 @@ private fun Application.instalarCabecerasSeguridad() {
 private fun Application.instalarCors(origenes: List<String>) {
     install(CORS) {
         allowMethod(HttpMethod.Get)
+        allowMethod(HttpMethod.Post)
+        allowMethod(HttpMethod.Put)
+        allowHeader(HttpHeaders.Authorization)
+        allowHeader(HttpHeaders.ContentType)
         origenes.map(URI::create).forEach { allowHost(it.authority, schemes = listOf(it.scheme)) }
     }
 }
 
 private fun Application.instalarErrores() {
     install(StatusPages) {
+        // JSON mal formado o con campos de más: sin detalle, porque el mensaje podría repetir datos del paciente.
+        exception<BadRequestException> { call, _ ->
+            call.respond(HttpStatusCode.BadRequest, mapOf("error" to "solicitud-invalida"))
+        }
         exception<Throwable> { call, causa ->
             call.application.log.error("Error no controlado en {}", call.request.path(), causa)
             call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Error interno"))

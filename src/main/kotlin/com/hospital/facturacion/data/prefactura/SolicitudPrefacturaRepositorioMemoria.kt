@@ -1,5 +1,6 @@
 package com.hospital.facturacion.data.prefactura
 
+import com.hospital.facturacion.domain.cita.CitaId
 import com.hospital.facturacion.domain.prefactura.ConsecutivoRadicado
 import com.hospital.facturacion.domain.prefactura.SolicitudPrefactura
 import com.hospital.facturacion.domain.prefactura.SolicitudPrefacturaRepositorio
@@ -14,4 +15,8 @@ class SolicitudPrefacturaRepositorioMemoria : SolicitudPrefacturaRepositorio {
     }
 
     override fun buscar(consecutivo: ConsecutivoRadicado): SolicitudPrefactura? = solicitudes[consecutivo]
+
+    override fun buscarPorCita(cita: CitaId): SolicitudPrefactura? = solicitudes.values.firstOrNull { it.cita == cita }
+
+    override fun listar(): List<SolicitudPrefactura> = solicitudes.values.toList()
 }

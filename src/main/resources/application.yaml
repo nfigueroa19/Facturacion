@@ -12,6 +12,17 @@ prefactura:
     archivo: "$HSLV_CONTENIDO_ARCHIVO:config/contenido.json"
     imagenes: "$HSLV_CONTENIDO_IMAGENES:assets/imagenes"
     tamanoMaximoImagenBytes: "$HSLV_TAMANO_MAXIMO_IMAGEN:2097152"
+  solicitudes:
+    formulario: "$HSLV_FORMULARIO:config/formulario-prefactura.json"
+    # Datos ficticios del piloto. Se reemplazan por los adaptadores reales (call center, usuarios del hospital).
+    citasPrueba: "$HSLV_CITAS_PRUEBA:config/citas-prueba.json"
+    facturadoresPrueba: "$HSLV_FACTURADORES_PRUEBA:config/facturadores-prueba.json"
+    # Fuera del repositorio: aquí quedan los PDF que suben los pacientes.
+    soportes: "$HSLV_SOPORTES:datos/soportes"
+    # Límite técnico mientras se define P-08.
+    tamanoMaximoSoporteBytes: "$HSLV_TAMANO_MAXIMO_SOPORTE:5242880"
+    minutosSesion: "$HSLV_MINUTOS_SESION:480"
+    zonaHoraria: "$HSLV_ZONA_HORARIA:America/Bogota"
   cors:
     origenes: "$HSLV_CORS_ORIGENES:http://localhost:5173"
   secretos:

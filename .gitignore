@@ -16,6 +16,9 @@ secretos/
 .env
 .env.*
 
+# Soportes PDF que suben los pacientes.
+datos/
+
 # Bóveda de Obsidian e insumos de la reunión: solo en el equipo local.
 _Segundo_Cerebro/
 .obsidian/
