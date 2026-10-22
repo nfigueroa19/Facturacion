@@ -1,0 +1,15 @@
+{
+  "textos": {
+    "institucion.nombre": "Hospital Susana López de Valencia E.S.E.",
+    "prefactura.titulo": "Prefactura de consulta externa",
+    "acceso.campo-identificacion": "Número de identificación",
+    "acceso.campo-id-acceso": "ID de acceso",
+    "acceso.ayuda": "El ID de acceso llega por SMS cuando se asigna la cita.",
+    "soportes.instruccion": "Adjunte la autorización y la orden médica en PDF."
+  },
+  "imagenes": {
+    "logo-encabezado": "logo-hospital-sin-acreditacion.png",
+    "logo-acreditacion": "logo-hospital-acreditacion.png",
+    "logo-pie-pagina": "logo-hospital-footer.png"
+  }
+}

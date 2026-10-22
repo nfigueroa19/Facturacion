@@ -1,0 +1,5 @@
+﻿kepano/obsidian-skills v1.0.1 @ 3ccff5338ea700537839b21900aa5358a0402c98 (2026-09-15) instalado 2026-10-22
+blader/humanizer @ 8c307f3 (2026-10-16) -> humanizer
+hardikpandya/stop-slop @ 8da1f03 (2026-03-18) -> stop-slop
+cursor/plugins cursor-team-kit v1.2.0 @ eb4db2b (2026-10-21) -> thermo-nuclear-code-quality-review (sin disable-model-invocation), deslop
+miqdadbadjuber/anti-slop v3.2.21 @ 69416cf (2026-10-22) -> antislop, antislop-ui, antislop-copywriting, antislop-human, antislop-layoutmobile, antislop-code (sin MCP de contraste del plugin)

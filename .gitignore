@@ -1,0 +1,22 @@
+.gradle/
+build/
+.kotlin/
+.idea/
+*.iml
+*.log
+
+# Secretos: nunca en el repositorio, ni cifrados.
+*.p12
+*.pfx
+*.jks
+*.keystore
+secretos/
+.env
+.env.*
+
+# Bóveda de Obsidian e insumos de la reunión: solo en el equipo local.
+_Segundo_Cerebro/
+.obsidian/
+
+# Permisos locales de Claude Code.
+.claude/settings.local.json

@@ -1,0 +1,19 @@
+ktor:
+  deployment:
+    # Solo escucha en la máquina local; Cloudflare Tunnel publica el servicio sin abrir puertos.
+    host: "$HSLV_HOST:127.0.0.1"
+    port: "$HSLV_PUERTO:8080"
+  application:
+    modules:
+      - com.hospital.facturacion.arranque.AplicacionKt.modulo
+
+prefactura:
+  contenido:
+    archivo: "$HSLV_CONTENIDO_ARCHIVO:config/contenido.json"
+    imagenes: "$HSLV_CONTENIDO_IMAGENES:assets/imagenes"
+    tamanoMaximoImagenBytes: "$HSLV_TAMANO_MAXIMO_IMAGEN:2097152"
+  cors:
+    origenes: "$HSLV_CORS_ORIGENES:http://localhost:5173"
+  secretos:
+    almacen: "$HSLV_SECRETOS_ALMACEN:"
+    requeridos: "$HSLV_SECRETOS_REQUERIDOS:"
