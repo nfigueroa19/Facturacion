@@ -6,5 +6,12 @@ class Secreto(private val valor: CharArray) {
 
     fun borrar() = valor.fill('\u0000')
 
+    /** Usa el valor una sola vez y lo borra de memoria aunque el bloque falle. */
+    fun <T> consumir(bloque: (CharArray) -> T): T = try {
+        bloque(valor)
+    } finally {
+        borrar()
+    }
+
     override fun toString(): String = "Secreto(****)"
 }

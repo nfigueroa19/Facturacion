@@ -14,9 +14,9 @@ import com.hospital.facturacion.data.formulario.leerFormulario
 import com.hospital.facturacion.data.prefactura.GeneradorConsecutivoPostgres
 import com.hospital.facturacion.data.prefactura.SolicitudPrefacturaRepositorioPostgres
 import com.hospital.facturacion.data.sesion.SesionesMemoria
-import com.hospital.facturacion.data.soporte.AlmacenSoportesPostgres
 import com.hospital.facturacion.domain.cita.CitaId
 import com.hospital.facturacion.domain.facturador.Facturador
+import com.hospital.facturacion.domain.soporte.AlmacenSoportes
 import com.hospital.facturacion.service.facturador.AprobarSolicitud
 import com.hospital.facturacion.service.facturador.ConfirmarLlegada
 import com.hospital.facturacion.service.facturador.ConsultarSolicitud
@@ -37,13 +37,13 @@ import javax.sql.DataSource
 class ComposicionPrefactura(
     val configuracion: ConfiguracionSolicitudes,
     val baseDatos: DataSource,
+    val soportes: AlmacenSoportes,
     val reloj: Clock,
     val aleatorio: SecureRandom,
 ) {
     val agenda = AgendaCitasMemoria(leerCitasPrueba(configuracion.citasPrueba, Json, reloj))
     val formulario = leerFormulario(configuracion.formulario, Json)
     val solicitudes = SolicitudPrefacturaRepositorioPostgres(baseDatos, Json)
-    val soportes = AlmacenSoportesPostgres(baseDatos, configuracion.tamanoMaximoSoporteBytes)
     val pagos = PagosCopagoPostgres(baseDatos)
 
     // Las sesiones siguen en memoria: tras un reinicio el paciente y el facturador vuelven a ingresar.

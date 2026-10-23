@@ -2,6 +2,7 @@ package com.hospital.facturacion.arranque
 
 import com.hospital.facturacion.data.secretos.AlmacenSecretosPkcs12
 import com.hospital.facturacion.data.secretos.FuenteSecretos
+import com.hospital.facturacion.data.secretos.Secreto
 import org.slf4j.Logger
 import java.nio.file.Files
 import java.nio.file.Path
@@ -23,6 +24,12 @@ fun abrirSecretos(configuracion: ConfiguracionSecretos, entorno: (String) -> Str
     check(faltantes.isEmpty()) { "Faltan alias en el almacén de secretos: ${faltantes.joinToString()}" }
     registro.info("Almacén de secretos abierto: {} alias", almacen.aliases().size)
     return almacen
+}
+
+/** Secreto que un adaptador necesita para arrancar; detiene el arranque si falta el almacén o el alias. */
+fun FuenteSecretos?.exigir(alias: String, adaptador: String): Secreto {
+    val almacen = requireNotNull(this) { "$adaptador necesita el almacén de secretos (HSLV_SECRETOS_ALMACEN)" }
+    return requireNotNull(almacen.leer(alias)) { "Falta el alias $alias en el almacén de secretos" }
 }
 
 // El archivo de clave es la forma de Docker secrets; la variable directa queda para desarrollo local.

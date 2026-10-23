@@ -11,6 +11,10 @@ data class ConfiguracionSecretos(val almacen: Path?, val requeridos: Set<String>
 
 data class ConfiguracionBaseDatos(val url: String, val usuario: String, val aliasClave: String, val conexionesMaximas: Int)
 
+enum class DestinoSoportes { POSTGRES, APPWRITE }
+
+data class ConfiguracionSoportes(val destino: DestinoSoportes, val bucketAppwrite: String)
+
 data class ConfiguracionSolicitudes(
     val formulario: Path,
     val citasPrueba: Path,
@@ -26,6 +30,7 @@ data class ConfiguracionAplicacion(
     val origenesCors: List<String>,
     val secretos: ConfiguracionSecretos,
     val baseDatos: ConfiguracionBaseDatos,
+    val soportes: ConfiguracionSoportes,
 )
 
 fun ApplicationConfig.configuracionAplicacion(): ConfiguracionAplicacion {
@@ -55,6 +60,10 @@ fun ApplicationConfig.configuracionAplicacion(): ConfiguracionAplicacion {
             usuario = valor("basedatos.usuario"),
             aliasClave = valor("basedatos.aliasClave"),
             conexionesMaximas = valor("basedatos.conexionesMaximas").toInt(),
+        ),
+        soportes = ConfiguracionSoportes(
+            destino = DestinoSoportes.valueOf(valor("soportes.destino").uppercase()),
+            bucketAppwrite = valor("soportes.bucketAppwrite"),
         ),
     )
 }

@@ -27,11 +27,14 @@ import java.nio.file.Path
 fun probarModulo(
     temporal: Path,
     base: BaseDePrueba = PostgresDePrueba.baseNueva(),
+    configuracionExtra: Map<String, String> = emptyMap(),
+    secretosExtra: Map<String, String> = emptyMap(),
     bloque: suspend ApplicationTestBuilder.() -> Unit,
 ) = testApplication {
-    val almacen = AlmacenesDePrueba.crear(temporal.resolve("secretos.p12"), CLAVE_ALMACEN.toCharArray(), mapOf("basedatos.clave" to "sin-uso"))
+    val secretos = mapOf("basedatos.clave" to "sin-uso") + secretosExtra
+    val almacen = AlmacenesDePrueba.crear(temporal.resolve("secretos.p12"), CLAVE_ALMACEN.toCharArray(), secretos)
     environment {
-        config = MapApplicationConfig(
+        val configuracion = mapOf(
             "prefactura.contenido.archivo" to "config/contenido.json",
             "prefactura.contenido.imagenes" to "assets/imagenes",
             "prefactura.contenido.tamanoMaximoImagenBytes" to "2097152",
@@ -51,7 +54,10 @@ fun probarModulo(
             "prefactura.basedatos.ssl" to "disable",
             "prefactura.basedatos.aliasClave" to "basedatos.clave",
             "prefactura.basedatos.conexionesMaximas" to "2",
-        )
+            "prefactura.soportes.destino" to "postgres",
+            "prefactura.soportes.bucketAppwrite" to "soportes",
+        ) + configuracionExtra
+        config = MapApplicationConfig(*configuracion.toList().toTypedArray())
     }
     application { moduloCon(mapOf(VARIABLE_CLAVE to CLAVE_ALMACEN)::get) }
     bloque()

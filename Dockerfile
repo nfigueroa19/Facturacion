@@ -18,8 +18,9 @@ COPY assets assets
 COPY despliegue/iniciar.sh ./
 USER prefactura
 # Render enruta al puerto 10000 por defecto; dentro del contenedor hay que escuchar en todas las interfaces.
+# enable-native-access: jansi (consola de logback) carga una librería nativa y JDK 25 lo advierte en cada arranque.
 ENV HSLV_HOST=0.0.0.0 \
     HSLV_PUERTO=10000 \
-    JAVA_OPTS="-XX:MaxRAMPercentage=75"
+    JAVA_OPTS="-XX:MaxRAMPercentage=75 --enable-native-access=ALL-UNNAMED"
 EXPOSE 10000
 ENTRYPOINT ["sh", "iniciar.sh"]

@@ -7,14 +7,8 @@ import com.zaxxer.hikari.HikariDataSource
 
 /** Abre PostgreSQL con la clave guardada en el almacén PKCS12 y aplica las migraciones pendientes. */
 fun abrirBaseDatos(configuracion: ConfiguracionBaseDatos, secretos: FuenteSecretos?): HikariDataSource {
-    val almacen = requireNotNull(secretos) { "PostgreSQL necesita el almacén de secretos (HSLV_SECRETOS_ALMACEN)" }
-    val clave = requireNotNull(almacen.leer(configuracion.aliasClave)) {
-        "Falta el alias ${configuracion.aliasClave} en el almacén de secretos"
-    }
-    val fuente = try {
-        clave.usar { crearFuenteDatos(configuracion.url, configuracion.usuario, it, configuracion.conexionesMaximas) }
-    } finally {
-        clave.borrar()
+    val fuente = secretos.exigir(configuracion.aliasClave, "PostgreSQL").consumir {
+        crearFuenteDatos(configuracion.url, configuracion.usuario, it, configuracion.conexionesMaximas)
     }
     migrarEsquema(fuente)
     return fuente

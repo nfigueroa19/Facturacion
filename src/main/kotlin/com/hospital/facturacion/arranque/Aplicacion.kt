@@ -21,11 +21,14 @@ fun Application.modulo() = moduloCon(System::getenv)
 /** Raíz de composición: el único lugar donde se instancian implementaciones concretas. */
 fun Application.moduloCon(entorno: (String) -> String?) {
     val configuracion = environment.config.configuracionAplicacion()
-    val baseDatos = abrirBaseDatos(configuracion.baseDatos, abrirSecretos(configuracion.secretos, entorno, log))
+    val secretos = abrirSecretos(configuracion.secretos, entorno, log)
+    val baseDatos = abrirBaseDatos(configuracion.baseDatos, secretos)
     monitor.subscribe(ApplicationStopped) { baseDatos.close() }
+    val soportes = abrirSoportes(configuracion.soportes, configuracion.solicitudes.tamanoMaximoSoporteBytes, baseDatos, secretos)
+    log.info("Soportes PDF en {}", configuracion.soportes.destino)
     val contenido = ComposicionContenido(configuracion.contenido, log)
     val reloj = Clock.system(configuracion.solicitudes.zonaHoraria)
-    val prefactura = ComposicionPrefactura(configuracion.solicitudes, baseDatos, reloj, SecureRandom())
+    val prefactura = ComposicionPrefactura(configuracion.solicitudes, baseDatos, soportes, reloj, SecureRandom())
     instalarPlataforma(configuracion.origenesCors)
     instalarAutenticacion(prefactura.sesionesPaciente, prefactura.sesionesFacturador)
     routing {
