@@ -1,4 +1,5 @@
-# Blueprint del PoC en Render: backend Ktor (Docker) + PostgreSQL; PDF en Appwrite Storage. Solo datos ficticios.
+# Blueprint del PoC en Render: backend Ktor (Docker). Tablas en Appwrite TablesDB y PDF en Appwrite Storage.
+# Solo datos ficticios (excepción PoC de AGENTS.md, sección 3).
 # Pasos completos: _Segundo_Cerebro/02_Arquitectura/manual-despliegue-produccion-poc.md (fuera del repositorio).
 services:
   - type: web
@@ -14,38 +15,20 @@ services:
     envVars:
       - key: HSLV_CORS_ORIGENES
         value: https://facturacion.hosusana.com
-      # Host interno de la base (dpg-...-a). Render no lo expone a los Blueprints sin la clave; se copia del panel.
-      - key: HSLV_BD_HOST
-        sync: false
-      - key: HSLV_BD_NOMBRE
-        fromDatabase:
-          name: facturacion-bd
-          property: database
-      - key: HSLV_BD_USUARIO
-        fromDatabase:
-          name: facturacion-bd
-          property: user
-      # Los PDF de soporte van a Appwrite Storage; el contenedor no guarda archivos.
-      - key: HSLV_SOPORTES_DESTINO
+      # El contenedor no guarda datos: tablas y soportes PDF van al proyecto de Appwrite.
+      - key: HSLV_PERSISTENCIA
         value: appwrite
+      - key: HSLV_APPWRITE_BASE
+        value: facturacion_db
       - key: HSLV_APPWRITE_BUCKET
-        value: soportes
-      # Ninguna credencial va en variables: la clave de la base y el endpoint, proyecto y clave de API de Appwrite
-      # están dentro del PKCS12. Sin alguno de estos alias el servicio no arranca.
+        value: soportes_pdf
+      # Ninguna credencial va en variables: endpoint, proyecto y clave de API de Appwrite están dentro del PKCS12.
+      # Sin alguno de estos alias el servicio no arranca.
       - key: HSLV_SECRETOS_ALMACEN_BASE64
         value: /etc/secrets/prefactura.p12.b64
       - key: HSLV_SECRETOS_CLAVE_ARCHIVO
         value: /etc/secrets/clave-almacen.txt
       - key: HSLV_SECRETOS_REQUERIDOS
-        value: basedatos.clave,appwrite.endpoint,appwrite.proyecto,appwrite.clave
+        value: appwrite.endpoint,appwrite.proyecto,appwrite.clave
       - key: HSLV_FACTURADORES_PRUEBA
         value: /etc/secrets/facturadores.json
-
-databases:
-  - name: facturacion-bd
-    plan: free
-    region: virginia
-    databaseName: facturacion
-    user: facturacion
-    # Sin IP externas: solo el servicio web, por la red privada de Render.
-    ipAllowList: []

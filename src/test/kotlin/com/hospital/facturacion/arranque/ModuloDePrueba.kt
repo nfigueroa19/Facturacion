@@ -1,6 +1,8 @@
 package com.hospital.facturacion.arranque
 
 import com.hospital.facturacion.AlmacenesDePrueba
+import com.hospital.facturacion.BASE_APPWRITE_PRUEBA
+import com.hospital.facturacion.BUCKET_APPWRITE_PRUEBA
 import com.hospital.facturacion.BaseDePrueba
 import com.hospital.facturacion.PostgresDePrueba
 import io.ktor.client.HttpClient
@@ -54,8 +56,9 @@ fun probarModulo(
             "prefactura.basedatos.ssl" to "disable",
             "prefactura.basedatos.aliasClave" to "basedatos.clave",
             "prefactura.basedatos.conexionesMaximas" to "2",
-            "prefactura.soportes.destino" to "postgres",
-            "prefactura.soportes.bucketAppwrite" to "soportes",
+            "prefactura.persistencia.destino" to "postgres",
+            "prefactura.persistencia.baseDatosAppwrite" to BASE_APPWRITE_PRUEBA,
+            "prefactura.persistencia.bucketAppwrite" to BUCKET_APPWRITE_PRUEBA,
         ) + configuracionExtra
         config = MapApplicationConfig(*configuracion.toList().toTypedArray())
     }

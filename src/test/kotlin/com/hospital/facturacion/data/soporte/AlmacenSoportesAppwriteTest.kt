@@ -1,11 +1,11 @@
 package com.hospital.facturacion.data.soporte
 
 import com.hospital.facturacion.AppwriteDePrueba
+import com.hospital.facturacion.BUCKET_APPWRITE_PRUEBA
 import com.hospital.facturacion.citaIdDePrueba
 import com.hospital.facturacion.domain.soporte.TipoSoporte
 import com.hospital.facturacion.pdfDePrueba
 import org.junit.jupiter.api.AfterEach
-import java.net.http.HttpClient
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -14,8 +14,7 @@ import kotlin.test.assertNull
 
 class AlmacenSoportesAppwriteTest {
     private val appwrite = AppwriteDePrueba()
-    private val cliente = HttpClient.newHttpClient()
-    private val almacen = AlmacenSoportesAppwrite(appwrite.bucket(), cliente, 1024)
+    private val almacen = AlmacenSoportesAppwrite(appwrite.cliente(), BUCKET_APPWRITE_PRUEBA, 1024)
 
     @AfterEach
     fun cerrar() = appwrite.close()
@@ -39,10 +38,10 @@ class AlmacenSoportesAppwriteTest {
 
     @Test
     fun `falla sin guardar nada si Appwrite rechaza la clave y no admite limites que exigen subir por partes`() {
-        val sinPermiso = AlmacenSoportesAppwrite(appwrite.bucket("clave-equivocada"), cliente, 1024)
+        val sinPermiso = AlmacenSoportesAppwrite(appwrite.cliente("clave-equivocada"), BUCKET_APPWRITE_PRUEBA, 1024)
         val error = assertFailsWith<IllegalStateException> { sinPermiso.guardar(citaIdDePrueba, TipoSoporte.AUTORIZACION, pdfDePrueba()) }
         assertContains(error.message.orEmpty(), "401")
         assertEquals(emptyMap(), appwrite.archivos)
-        assertFailsWith<IllegalArgumentException> { AlmacenSoportesAppwrite(appwrite.bucket(), cliente, 5 * 1024 * 1024 + 1) }
+        assertFailsWith<IllegalArgumentException> { AlmacenSoportesAppwrite(appwrite.cliente(), BUCKET_APPWRITE_PRUEBA, 5 * 1024 * 1024 + 1) }
     }
 }

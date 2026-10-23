@@ -17,4 +17,4 @@ class AgendaCitasMemoria(private val citas: List<CitaRegistrada>) : AgendaCitas 
 }
 
 // Comparación en tiempo constante para no filtrar por tiempo de respuesta cuántos caracteres coinciden.
-private fun String.igualA(otro: String): Boolean = MessageDigest.isEqual(toByteArray(), otro.toByteArray())
+internal fun String.igualA(otro: String): Boolean = MessageDigest.isEqual(toByteArray(), otro.toByteArray())

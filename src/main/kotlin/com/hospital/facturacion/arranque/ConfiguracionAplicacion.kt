@@ -11,9 +11,9 @@ data class ConfiguracionSecretos(val almacen: Path?, val requeridos: Set<String>
 
 data class ConfiguracionBaseDatos(val url: String, val usuario: String, val aliasClave: String, val conexionesMaximas: Int)
 
-enum class DestinoSoportes { POSTGRES, APPWRITE }
+enum class DestinoPersistencia { POSTGRES, APPWRITE }
 
-data class ConfiguracionSoportes(val destino: DestinoSoportes, val bucketAppwrite: String)
+data class ConfiguracionPersistencia(val destino: DestinoPersistencia, val baseDatosAppwrite: String, val bucketAppwrite: String)
 
 data class ConfiguracionSolicitudes(
     val formulario: Path,
@@ -30,7 +30,7 @@ data class ConfiguracionAplicacion(
     val origenesCors: List<String>,
     val secretos: ConfiguracionSecretos,
     val baseDatos: ConfiguracionBaseDatos,
-    val soportes: ConfiguracionSoportes,
+    val persistencia: ConfiguracionPersistencia,
 )
 
 fun ApplicationConfig.configuracionAplicacion(): ConfiguracionAplicacion {
@@ -61,9 +61,10 @@ fun ApplicationConfig.configuracionAplicacion(): ConfiguracionAplicacion {
             aliasClave = valor("basedatos.aliasClave"),
             conexionesMaximas = valor("basedatos.conexionesMaximas").toInt(),
         ),
-        soportes = ConfiguracionSoportes(
-            destino = DestinoSoportes.valueOf(valor("soportes.destino").uppercase()),
-            bucketAppwrite = valor("soportes.bucketAppwrite"),
+        persistencia = ConfiguracionPersistencia(
+            destino = DestinoPersistencia.valueOf(valor("persistencia.destino").uppercase()),
+            baseDatosAppwrite = valor("persistencia.baseDatosAppwrite"),
+            bucketAppwrite = valor("persistencia.bucketAppwrite"),
         ),
     )
 }

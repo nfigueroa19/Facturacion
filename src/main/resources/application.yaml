@@ -36,8 +36,10 @@ prefactura:
     ssl: "$HSLV_BD_SSL:prefer"
     aliasClave: "$HSLV_BD_ALIAS_CLAVE:basedatos.clave"
     conexionesMaximas: "$HSLV_BD_CONEXIONES:5"
-  soportes:
-    # postgres (tabla soporte) o appwrite (Storage). Con appwrite, el endpoint, el proyecto y la clave de API
-    # se leen del almacén de secretos: alias appwrite.endpoint, appwrite.proyecto y appwrite.clave.
-    destino: "$HSLV_SOPORTES_DESTINO:postgres"
-    bucketAppwrite: "$HSLV_APPWRITE_BUCKET:soportes"
+  persistencia:
+    # postgres: tablas y PDF en PostgreSQL (sección basedatos), citas en memoria.
+    # appwrite: tablas en TablesDB y PDF en Storage. El endpoint, el proyecto y la clave de API se leen del almacén
+    # de secretos con los alias appwrite.endpoint, appwrite.proyecto y appwrite.clave.
+    destino: "$HSLV_PERSISTENCIA:postgres"
+    baseDatosAppwrite: "$HSLV_APPWRITE_BASE:facturacion_db"
+    bucketAppwrite: "$HSLV_APPWRITE_BUCKET:soportes_pdf"

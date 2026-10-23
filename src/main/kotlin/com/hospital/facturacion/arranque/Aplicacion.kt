@@ -22,13 +22,12 @@ fun Application.modulo() = moduloCon(System::getenv)
 fun Application.moduloCon(entorno: (String) -> String?) {
     val configuracion = environment.config.configuracionAplicacion()
     val secretos = abrirSecretos(configuracion.secretos, entorno, log)
-    val baseDatos = abrirBaseDatos(configuracion.baseDatos, secretos)
-    monitor.subscribe(ApplicationStopped) { baseDatos.close() }
-    val soportes = abrirSoportes(configuracion.soportes, configuracion.solicitudes.tamanoMaximoSoporteBytes, baseDatos, secretos)
-    log.info("Soportes PDF en {}", configuracion.soportes.destino)
-    val contenido = ComposicionContenido(configuracion.contenido, log)
     val reloj = Clock.system(configuracion.solicitudes.zonaHoraria)
-    val prefactura = ComposicionPrefactura(configuracion.solicitudes, baseDatos, soportes, reloj, SecureRandom())
+    val persistencia = abrirPersistencia(configuracion, secretos, reloj)
+    monitor.subscribe(ApplicationStopped) { persistencia.cerrar() }
+    log.info("Persistencia en {}", configuracion.persistencia.destino)
+    val contenido = ComposicionContenido(configuracion.contenido, log)
+    val prefactura = ComposicionPrefactura(configuracion.solicitudes, persistencia, reloj, SecureRandom())
     instalarPlataforma(configuracion.origenesCors)
     instalarAutenticacion(prefactura.sesionesPaciente, prefactura.sesionesFacturador)
     routing {

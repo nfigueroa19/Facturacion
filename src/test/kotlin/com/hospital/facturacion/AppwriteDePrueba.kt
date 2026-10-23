@@ -3,45 +3,55 @@ package com.hospital.facturacion
 import com.hospital.facturacion.arranque.ALIAS_APPWRITE_CLAVE
 import com.hospital.facturacion.arranque.ALIAS_APPWRITE_ENDPOINT
 import com.hospital.facturacion.arranque.ALIAS_APPWRITE_PROYECTO
-import com.hospital.facturacion.data.appwrite.BucketAppwrite
+import com.hospital.facturacion.data.appwrite.ClienteAppwrite
+import com.hospital.facturacion.data.appwrite.TablaAppwrite
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
+import kotlinx.serialization.KSerializer
 import java.net.InetSocketAddress
 import java.net.URI
+import java.net.http.HttpClient
 import java.util.concurrent.ConcurrentHashMap
 
+const val BASE_APPWRITE_PRUEBA = "facturacion_db"
+const val BUCKET_APPWRITE_PRUEBA = "soportes_pdf"
+
 /**
- * Imitación local de Appwrite Storage: un bucket `soportes` en memoria con las rutas y los códigos de la API REST
- * (201 al crear, 409 si el ID existe, 204 al borrar, 404 si no está, 401 sin proyecto o clave correctos).
+ * Imitación local de Appwrite: el bucket de Storage y las tablas de TablesDB en memoria, con las rutas y los códigos
+ * de la API REST. Responde 401 sin el proyecto o la clave correctos.
  */
 class AppwriteDePrueba(val proyecto: String = "proyecto-prueba", val claveApi: String = "clave-api-prueba") : AutoCloseable {
     val archivos = ConcurrentHashMap<String, ArchivoAppwrite>()
+    val tablas = TablasDePrueba()
+    private val http = HttpClient.newHttpClient()
     private val servidor = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0).apply {
-        createContext("/v1/storage/buckets/soportes/files") { intercambio -> intercambio.use { atender(it) } }
+        createContext("/v1/storage/buckets/$BUCKET_APPWRITE_PRUEBA/files") { atender(it) { ruta -> archivos.responder(it.requestMethod, ruta, it) } }
+        createContext("/v1/tablesdb/$BASE_APPWRITE_PRUEBA/tables") { atender(it) { ruta -> tablas.responder(it, ruta) } }
         start()
     }
 
     val endpoint: URI get() = URI("http://127.0.0.1:${servidor.address.port}/v1")
 
-    fun bucket(clave: String = claveApi) = BucketAppwrite(endpoint, proyecto, "soportes", clave)
+    fun cliente(clave: String = claveApi) = ClienteAppwrite(endpoint, proyecto, clave, http)
+
+    fun <F> tabla(nombre: String, forma: KSerializer<F>) = TablaAppwrite(cliente(), BASE_APPWRITE_PRUEBA, nombre, forma)
 
     /** Alias del almacén PKCS12 que apuntan a esta imitación. */
-    fun secretos() = mapOf(
-        ALIAS_APPWRITE_ENDPOINT to endpoint.toString(),
-        ALIAS_APPWRITE_PROYECTO to proyecto,
-        ALIAS_APPWRITE_CLAVE to claveApi,
-    )
+    fun secretos() = mapOf(ALIAS_APPWRITE_ENDPOINT to endpoint.toString(), ALIAS_APPWRITE_PROYECTO to proyecto, ALIAS_APPWRITE_CLAVE to claveApi)
 
-    private fun atender(intercambio: HttpExchange) {
-        val cabeceras = intercambio.requestHeaders
+    private fun atender(intercambio: HttpExchange, responder: (ruta: String) -> Pair<Int, ByteArray?>) = intercambio.use {
+        val cabeceras = it.requestHeaders
         val autorizado = cabeceras.getFirst("X-Appwrite-Project") == proyecto && cabeceras.getFirst("X-Appwrite-Key") == claveApi
-        val ruta = intercambio.requestURI.path.substringAfter("/files").trim('/')
-        val (estado, cuerpo) = if (autorizado) archivos.responder(intercambio.requestMethod, ruta, intercambio) else 401 to null
-        intercambio.sendResponseHeaders(estado, cuerpo?.size?.toLong() ?: -1)
-        cuerpo?.let(intercambio.responseBody::write)
+        val ruta = it.requestURI.path.removePrefix(it.httpContext.path).trim('/')
+        val (estado, cuerpo) = if (autorizado) responder(ruta) else 401 to null
+        it.sendResponseHeaders(estado, cuerpo?.size?.toLong() ?: -1)
+        cuerpo?.let(it.responseBody::write)
     }
 
-    override fun close() = servidor.stop(0)
+    override fun close() {
+        servidor.stop(0)
+        http.close()
+    }
 }
 
 data class ArchivoAppwrite(val nombre: String, val contenido: ByteArray)
