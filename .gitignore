@@ -12,11 +12,12 @@ dist/
 *.pfx
 *.jks
 *.keystore
-secretos/
+# Solo la carpeta de la raíz: src/main/kotlin/.../data/secretos es código y sí se versiona.
+/secretos/
 .env
 .env.*
 
-# Soportes PDF que suben los pacientes.
+# Datos locales de ejecución; los soportes PDF ahora viven en PostgreSQL.
 datos/
 
 # Bóveda de Obsidian e insumos de la reunión: solo en el equipo local.

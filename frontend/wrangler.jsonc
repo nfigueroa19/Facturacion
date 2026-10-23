@@ -1,0 +1,12 @@
+// Worker de solo assets: sirve el build de Vite en facturacion.hosusana.com. Sin código de servidor.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "facturacion-poc",
+  "compatibility_date": "2026-10-22",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [{ "pattern": "facturacion.hosusana.com", "custom_domain": true }],
+  "workers_dev": false
+}

@@ -20,10 +20,10 @@ import kotlin.test.assertTrue
 /** Novedad, corrección del paciente, aprobación con checklist y llegada confirmada. */
 class CicloRevisionTest {
     @TempDir
-    lateinit var soportes: Path
+    lateinit var temporal: Path
 
     @Test
-    fun `una solicitud con novedades vuelve a revision y termina lista para facturar`() = probarModulo(soportes) {
+    fun `una solicitud con novedades vuelve a revision y termina lista para facturar`() = probarModulo(temporal) {
         val paciente = client.tokenPaciente()
         val ruta = "/api/facturador/solicitudes/" + client.radicarSolicitudCompleta(paciente)
         val facturador = client.tokenFacturador()

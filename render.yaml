@@ -1,0 +1,45 @@
+# Blueprint del PoC en Render: backend Ktor (Docker) + PostgreSQL. Solo datos ficticios.
+# Pasos completos: _Segundo_Cerebro/02_Arquitectura/manual-despliegue-produccion-poc.md (fuera del repositorio).
+services:
+  - type: web
+    name: api-facturacion
+    runtime: docker
+    plan: free
+    region: virginia
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /salud
+    domains:
+      - api-facturacion.hosusana.com
+    envVars:
+      - key: HSLV_CORS_ORIGENES
+        value: https://facturacion.hosusana.com
+      # Host interno de la base (dpg-...-a). Render no lo expone a los Blueprints sin la clave; se copia del panel.
+      - key: HSLV_BD_HOST
+        sync: false
+      - key: HSLV_BD_NOMBRE
+        fromDatabase:
+          name: facturacion-bd
+          property: database
+      - key: HSLV_BD_USUARIO
+        fromDatabase:
+          name: facturacion-bd
+          property: user
+      # La clave de la base no va en variables: está dentro del PKCS12 (alias basedatos.clave).
+      - key: HSLV_SECRETOS_ALMACEN_BASE64
+        value: /etc/secrets/prefactura.p12.b64
+      - key: HSLV_SECRETOS_CLAVE_ARCHIVO
+        value: /etc/secrets/clave-almacen.txt
+      - key: HSLV_SECRETOS_REQUERIDOS
+        value: basedatos.clave
+      - key: HSLV_FACTURADORES_PRUEBA
+        value: /etc/secrets/facturadores.json
+
+databases:
+  - name: facturacion-bd
+    plan: free
+    region: virginia
+    databaseName: facturacion
+    user: facturacion
+    # Sin IP externas: solo el servicio web, por la red privada de Render.
+    ipAllowList: []

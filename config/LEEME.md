@@ -44,7 +44,9 @@ Citas (`config/citas-prueba.json`). La fecha de cada cita se cuenta desde el dí
 
 Panel del facturador (`http://localhost:5173/facturador`): usuario `facturador`, clave `prueba123`. El archivo `config/facturadores-prueba.json` guarda solo el hash de la clave.
 
-El pago del copago es simulado: aprueba siempre y no cobra dinero. Las solicitudes, los pagos y las sesiones se guardan en memoria y se pierden al reiniciar el servidor; los PDF quedan en `datos/soportes/`, que no se sube al repositorio.
+El pago del copago es simulado: aprueba siempre y no cobra dinero. Las solicitudes, los PDF, los pagos y los facturadores se guardan en PostgreSQL y siguen ahí después de reiniciar el servidor. Las sesiones se guardan en memoria: tras un reinicio hay que volver a ingresar.
+
+Al arrancar, el servidor copia a la base los usuarios de `config/facturadores-prueba.json`. Si un usuario ya existe, actualiza su nombre y su clave; quitarlo del archivo no lo borra de la base.
 
 ## Si algo sale mal
 Si el archivo queda con un error (por ejemplo, falta una coma o unas comillas), la web sigue mostrando la última versión correcta y el servidor deja el motivo en su registro. Corrija el archivo y guárdelo de nuevo.

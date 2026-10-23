@@ -1,0 +1,7 @@
+# Cabeceras que Cloudflare aplica a cada archivo del Worker de assets.
+/*
+  X-Content-Type-Options: nosniff
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
+  Content-Security-Policy: frame-ancestors 'none'
+  Permissions-Policy: camera=(), microphone=(), geolocation=()

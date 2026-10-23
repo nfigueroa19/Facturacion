@@ -18,10 +18,10 @@ import kotlin.test.assertTrue
 
 class RutasPacienteTest {
     @TempDir
-    lateinit var soportes: Path
+    lateinit var temporal: Path
 
     @Test
-    fun `rechaza credenciales erradas y rutas sin sesion`() = probarModulo(soportes) {
+    fun `rechaza credenciales erradas y rutas sin sesion`() = probarModulo(temporal) {
         val errado = client.enviar("/api/paciente/sesion", """{"identificacion":"1000000001","codigoAcceso":"OTRO"}""")
         assertEquals(HttpStatusCode.Unauthorized, errado.status)
         assertEquals(HttpStatusCode.Unauthorized, client.get("/api/paciente/prefactura").status)
@@ -30,7 +30,7 @@ class RutasPacienteTest {
     }
 
     @Test
-    fun `valida los PDF por contenido y por tamano`() = probarModulo(soportes) {
+    fun `valida los PDF por contenido y por tamano`() = probarModulo(temporal) {
         val token = client.tokenPaciente()
         assertEquals("NO_ES_PDF", client.subirPdf("AUTORIZACION", "\u0089PNG imagen", token).campo("error"))
         assertEquals("EXCEDE_TAMANO", client.subirPdf("AUTORIZACION", "%PDF-" + "x".repeat(1024), token).campo("error"))
@@ -39,7 +39,7 @@ class RutasPacienteTest {
     }
 
     @Test
-    fun `paga el copago simulado, radica y no admite cambios mientras esta en revision`() = probarModulo(soportes) {
+    fun `paga el copago simulado, radica y no admite cambios mientras esta en revision`() = probarModulo(temporal) {
         val token = client.tokenPaciente()
         assertTrue(client.enviar("/api/paciente/copago", "", token).campo("referencia").startsWith("SIM-"))
         val faltan = client.enviar("/api/paciente/solicitud", """{"datos":{}}""", token)

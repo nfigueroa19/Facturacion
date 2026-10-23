@@ -6,7 +6,7 @@ import com.hospital.facturacion.domain.prefactura.SolicitudPrefactura
 import com.hospital.facturacion.domain.prefactura.SolicitudPrefacturaRepositorio
 import java.util.concurrent.ConcurrentHashMap
 
-/** Persistencia del piloto con datos ficticios. Se reemplaza por el adaptador PostgreSQL. */
+/** Doble en memoria para las pruebas de los casos de uso. La aplicación usa `SolicitudPrefacturaRepositorioPostgres`. */
 class SolicitudPrefacturaRepositorioMemoria : SolicitudPrefacturaRepositorio {
     private val solicitudes = ConcurrentHashMap<ConsecutivoRadicado, SolicitudPrefactura>()
 

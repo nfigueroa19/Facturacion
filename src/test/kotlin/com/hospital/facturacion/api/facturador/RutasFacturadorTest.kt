@@ -20,10 +20,10 @@ import kotlin.test.assertTrue
 
 class RutasFacturadorTest {
     @TempDir
-    lateinit var soportes: Path
+    lateinit var temporal: Path
 
     @Test
-    fun `el panel exige la sesion del facturador, no la del paciente`() = probarModulo(soportes) {
+    fun `el panel exige la sesion del facturador, no la del paciente`() = probarModulo(temporal) {
         assertEquals(HttpStatusCode.Unauthorized, client.enviar("/api/facturador/sesion", """{"usuario":"facturador","clave":"x"}""").status)
         val paciente = client.tokenPaciente()
         assertEquals(HttpStatusCode.Unauthorized, client.get("/api/facturador/solicitudes") { bearerAuth(paciente) }.status)
@@ -31,7 +31,7 @@ class RutasFacturadorTest {
     }
 
     @Test
-    fun `revisa la cola, abre los PDF y muestra los datos con su etiqueta`() = probarModulo(soportes) {
+    fun `revisa la cola, abre los PDF y muestra los datos con su etiqueta`() = probarModulo(temporal) {
         val consecutivo = client.radicarSolicitudCompleta(client.tokenPaciente())
         val token = client.tokenFacturador()
         val cola = client.get("/api/facturador/solicitudes?estado=EN_REVISION") { bearerAuth(token) }.bodyAsText()

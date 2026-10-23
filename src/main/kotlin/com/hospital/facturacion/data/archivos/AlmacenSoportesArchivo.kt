@@ -4,7 +4,7 @@ import com.hospital.facturacion.domain.cita.CitaId
 import com.hospital.facturacion.domain.soporte.AlmacenSoportes
 import com.hospital.facturacion.domain.soporte.DocumentoPdf
 import com.hospital.facturacion.domain.soporte.TipoSoporte
-import com.hospital.facturacion.domain.soporte.ValidacionPdf
+import com.hospital.facturacion.domain.soporte.pdfAceptado
 import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.StandardCopyOption
@@ -25,10 +25,7 @@ class AlmacenSoportesArchivo(private val directorio: DirectorioSeguro, private v
     override fun leer(cita: CitaId, tipo: TipoSoporte): DocumentoPdf? {
         val ruta = directorio.resolver(nombre(cita, tipo)) ?: return null
         val bytes = Files.newInputStream(ruta, LinkOption.NOFOLLOW_LINKS).use { it.readNBytes(tamanoMaximoBytes + 1) }
-        return when (val validacion = DocumentoPdf.validar(bytes, tamanoMaximoBytes)) {
-            is ValidacionPdf.Valido -> validacion.pdf
-            is ValidacionPdf.Invalido -> null
-        }
+        return DocumentoPdf.validar(bytes, tamanoMaximoBytes).pdfAceptado()
     }
 
     override fun cargados(cita: CitaId): Set<TipoSoporte> =

@@ -9,11 +9,12 @@ data class ConfiguracionContenido(val archivo: Path, val directorioImagenes: Pat
 
 data class ConfiguracionSecretos(val almacen: Path?, val requeridos: Set<String>)
 
+data class ConfiguracionBaseDatos(val url: String, val usuario: String, val aliasClave: String, val conexionesMaximas: Int)
+
 data class ConfiguracionSolicitudes(
     val formulario: Path,
     val citasPrueba: Path,
     val facturadoresPrueba: Path,
-    val directorioSoportes: Path,
     val tamanoMaximoSoporteBytes: Int,
     val duracionSesion: Duration,
     val zonaHoraria: ZoneId,
@@ -24,6 +25,7 @@ data class ConfiguracionAplicacion(
     val solicitudes: ConfiguracionSolicitudes,
     val origenesCors: List<String>,
     val secretos: ConfiguracionSecretos,
+    val baseDatos: ConfiguracionBaseDatos,
 )
 
 fun ApplicationConfig.configuracionAplicacion(): ConfiguracionAplicacion {
@@ -38,7 +40,6 @@ fun ApplicationConfig.configuracionAplicacion(): ConfiguracionAplicacion {
             formulario = Path.of(valor("solicitudes.formulario")),
             citasPrueba = Path.of(valor("solicitudes.citasPrueba")),
             facturadoresPrueba = Path.of(valor("solicitudes.facturadoresPrueba")),
-            directorioSoportes = Path.of(valor("solicitudes.soportes")),
             tamanoMaximoSoporteBytes = valor("solicitudes.tamanoMaximoSoporteBytes").toInt(),
             duracionSesion = Duration.ofMinutes(valor("solicitudes.minutosSesion").toLong()),
             zonaHoraria = ZoneId.of(valor("solicitudes.zonaHoraria")),
@@ -47,6 +48,13 @@ fun ApplicationConfig.configuracionAplicacion(): ConfiguracionAplicacion {
         secretos = ConfiguracionSecretos(
             almacen = valor("secretos.almacen").ifBlank { null }?.let(Path::of),
             requeridos = valor("secretos.requeridos").separadoPorComas().toSet(),
+        ),
+        baseDatos = ConfiguracionBaseDatos(
+            url = "jdbc:postgresql://${valor("basedatos.host")}:${valor("basedatos.puerto")}/${valor("basedatos.nombre")}" +
+                "?sslmode=${valor("basedatos.ssl")}",
+            usuario = valor("basedatos.usuario"),
+            aliasClave = valor("basedatos.aliasClave"),
+            conexionesMaximas = valor("basedatos.conexionesMaximas").toInt(),
         ),
     )
 }

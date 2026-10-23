@@ -1,0 +1,11 @@
+# Lista blanca: nada de secretos, bóveda, frontend ni compilaciones locales entra al contexto de Docker.
+*
+!gradlew
+!gradle/
+!settings.gradle.kts
+!build.gradle.kts
+!gradle.properties
+!src/
+!config/
+!assets/
+!despliegue/iniciar.sh

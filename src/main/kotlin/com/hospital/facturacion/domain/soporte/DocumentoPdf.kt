@@ -24,3 +24,9 @@ sealed interface ValidacionPdf {
 
     data class Invalido(val motivo: MotivoRechazoPdf) : ValidacionPdf
 }
+
+/** El PDF si pasó la validación; null si fue rechazado. */
+fun ValidacionPdf.pdfAceptado(): DocumentoPdf? = when (this) {
+    is ValidacionPdf.Valido -> pdf
+    is ValidacionPdf.Invalido -> null
+}

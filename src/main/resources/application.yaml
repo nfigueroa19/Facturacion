@@ -17,8 +17,6 @@ prefactura:
     # Datos ficticios del piloto. Se reemplazan por los adaptadores reales (call center, usuarios del hospital).
     citasPrueba: "$HSLV_CITAS_PRUEBA:config/citas-prueba.json"
     facturadoresPrueba: "$HSLV_FACTURADORES_PRUEBA:config/facturadores-prueba.json"
-    # Fuera del repositorio: aquí quedan los PDF que suben los pacientes.
-    soportes: "$HSLV_SOPORTES:datos/soportes"
     # Límite técnico mientras se define P-08.
     tamanoMaximoSoporteBytes: "$HSLV_TAMANO_MAXIMO_SOPORTE:5242880"
     minutosSesion: "$HSLV_MINUTOS_SESION:480"
@@ -28,3 +26,13 @@ prefactura:
   secretos:
     almacen: "$HSLV_SECRETOS_ALMACEN:"
     requeridos: "$HSLV_SECRETOS_REQUERIDOS:"
+  # La clave no va aquí: se lee del almacén de secretos con el alias `aliasClave`.
+  basedatos:
+    host: "$HSLV_BD_HOST:127.0.0.1"
+    puerto: "$HSLV_BD_PUERTO:5432"
+    nombre: "$HSLV_BD_NOMBRE:facturacion"
+    usuario: "$HSLV_BD_USUARIO:facturacion"
+    # disable, prefer, require o verify-full (valores de sslmode de pgjdbc).
+    ssl: "$HSLV_BD_SSL:prefer"
+    aliasClave: "$HSLV_BD_ALIAS_CLAVE:basedatos.clave"
+    conexionesMaximas: "$HSLV_BD_CONEXIONES:5"

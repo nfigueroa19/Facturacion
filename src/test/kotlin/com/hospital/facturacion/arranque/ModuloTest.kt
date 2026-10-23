@@ -13,10 +13,10 @@ import kotlin.test.assertFalse
 
 class ModuloTest {
     @TempDir
-    lateinit var soportes: Path
+    lateinit var temporal: Path
 
     @Test
-    fun `sirve salud y los logos institucionales sin metadatos de texto`() = probarModulo(soportes) {
+    fun `sirve salud y los logos institucionales sin metadatos de texto`() = probarModulo(temporal) {
         assertEquals("""{"estado":"activo"}""", client.get("/salud").bodyAsText())
         for (clave in listOf("logo-encabezado", "logo-acreditacion", "logo-pie-pagina")) {
             val respuesta = client.get("/api/contenido/imagenes/$clave")
