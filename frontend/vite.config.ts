@@ -11,6 +11,15 @@ export default defineConfig(({ mode }) => ({
   define: mode === "cloudflare" ? { "import.meta.env.VITE_URL_API": JSON.stringify(URL_API_POC) } : {},
   // El backend solo acepta CORS desde http://localhost:5173 (HSLV_CORS_ORIGENES).
   server: { host: "localhost", port: 5173, strictPort: true },
+  // El navegador solo recibe código minificado: sin mapas de fuente ni comentarios (tampoco los de licencia).
+  build: {
+    sourcemap: false,
+    minify: "oxc",
+    cssMinify: "lightningcss",
+    license: false,
+    reportCompressedSize: false,
+    rolldownOptions: { output: { comments: false } },
+  },
   test: {
     environment: "jsdom",
     setupFiles: ["./src/pruebas/configuracion.ts"],
