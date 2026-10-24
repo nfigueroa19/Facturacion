@@ -22,6 +22,8 @@ sealed interface ResultadoPago {
 
 sealed interface ResultadoPreparacion {
     data class Lista(val intencion: IntencionPago) : ResultadoPreparacion
+
+    data object PasarelaNoDisponible : ResultadoPreparacion
 }
 
 /** Lo que impide cobrar el copago en la web. Aplica igual al preparar el checkout y al registrar el pago. */

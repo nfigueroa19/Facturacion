@@ -40,8 +40,8 @@ class PagarCopagoTest {
     fun `no cobra sin copago activo, con la solicitud en revision ni registra pagos rechazados`() {
         assertEquals(ResultadoPago.SinCopago, pagar().ejecutar(citaSinCopago, medio))
         assertEquals(ResultadoPago.NoEditable, pagar(estado = EstadoPrefactura.EN_REVISION).ejecutar(citaConCopago, medio))
-        val rechaza = PasarelaPagos { _, _, _ -> ResultadoPasarela.Rechazado(MotivoRechazoPago.FONDOS_INSUFICIENTES) }
-        assertEquals(ResultadoPago.Rechazado(MotivoRechazoPago.FONDOS_INSUFICIENTES), pagar(rechaza).ejecutar(citaConCopago, medio))
+        val rechaza = PasarelaPagos { _, _, _ -> ResultadoPasarela.Rechazado(MotivoRechazoPago.RECHAZADA) }
+        assertEquals(ResultadoPago.Rechazado(MotivoRechazoPago.RECHAZADA), pagar(rechaza).ejecutar(citaConCopago, medio))
         assertEquals(null, pagos.buscar(citaConCopago.id))
         assertEquals(0, cobros)
     }

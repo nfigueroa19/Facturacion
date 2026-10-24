@@ -10,22 +10,24 @@ import java.security.SecureRandom
 import java.util.HexFormat
 
 /**
- * Parámetros firmados para el widget de Wompi. La referencia cambia en cada intento porque Wompi no admite repetirla.
- * Firma de integridad según Wompi: SHA-256 en hexadecimal de referencia, monto en centavos, moneda y secreto de
- * integridad, concatenados en ese orden.
+ * Parámetros para que el navegador cree la transacción en Wompi. La referencia cambia en cada intento porque Wompi no
+ * admite repetirla. Firma de integridad según Wompi: SHA-256 en hexadecimal de referencia, monto en centavos, moneda y
+ * secreto de integridad, concatenados en ese orden. Sin secreto no hay firma: el comercio de demostración no la exige.
  */
-class CheckoutWompi(private val credenciales: CredencialesWompi, private val aleatorio: SecureRandom) : CheckoutPasarela {
-    override fun preparar(cita: Cita, copago: Copago): IntencionPago {
+class CheckoutWompi(private val credenciales: CredencialesWompi, private val contratos: ContratosWompi, private val aleatorio: SecureRandom) :
+    CheckoutPasarela {
+    override fun preparar(cita: Cita, copago: Copago): IntencionPago? {
+        val aceptacion = contratos.consultar() ?: return null
         val referencia = prefijoReferencia(cita.id) + HexFormat.of().formatHex(ByteArray(6).also(aleatorio::nextBytes))
         val monto = copago.centavos()
-        val firma = MessageDigest.getInstance("SHA-256").digest("$referencia$monto$MONEDA_WOMPI${credenciales.integridad}".toByteArray())
-        return IntencionPago.Checkout(credenciales.publica, referencia, monto, MONEDA_WOMPI, HexFormat.of().formatHex(firma))
+        val firma = credenciales.integridad?.let { sha256("$referencia$monto$MONEDA_WOMPI$it") }
+        return IntencionPago(credenciales.publica, referencia, monto, MONEDA_WOMPI, firma, aceptacion)
     }
 }
 
-/** Llaves de pruebas de Wompi. `base` cambia solo en pruebas; las llaves privada y de integridad no aparecen en `toString`. */
-class CredencialesWompi(val publica: String, val privada: String, val integridad: String, val base: String = "https://sandbox.wompi.co") {
-    override fun toString() = "CredencialesWompi($publica, ****, ****)"
+/** Llaves de pruebas de Wompi. `base` sale de la configuración; el secreto de integridad no aparece en `toString`. */
+class CredencialesWompi(val publica: String, val integridad: String?, val base: String) {
+    override fun toString() = "CredencialesWompi($publica, ${if (integridad == null) "sin integridad" else "****"})"
 }
 
 /**
@@ -37,3 +39,5 @@ internal fun prefijoReferencia(cita: CitaId) = "${cita.valor}_"
 internal fun Copago.centavos() = valorPesos * 100
 
 internal const val MONEDA_WOMPI = "COP"
+
+private fun sha256(texto: String) = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(texto.toByteArray()))

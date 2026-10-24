@@ -1,7 +1,7 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { clientePaciente, montar, pdf, PREFACTURA } from "./dobles";
+import { clientePaciente, montar, pagarConNequi, pdf, PREFACTURA } from "./dobles";
 
 async function ingresarHastaDatos(paciente = clientePaciente()) {
   montar({ clientes: { paciente } });
@@ -30,11 +30,11 @@ describe("Flujo del paciente", () => {
     await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
 
     await screen.findByRole("heading", { name: "[copago.titulo]" });
-    await userEvent.click(screen.getByRole("button", { name: /Pagar/ }));
+    await pagarConNequi();
     await userEvent.click(await screen.findByRole("button", { name: "Enviar solicitud" }));
 
     expect(paciente.subirSoporte).toHaveBeenCalledTimes(2);
-    expect(paciente.pagarCopago).toHaveBeenCalledWith("token", "tok_prueba_aprobada");
+    expect(paciente.pagarCopago).toHaveBeenCalledWith("token", "tx-1");
     expect(paciente.radicar).toHaveBeenCalledWith("token", { "nombre-padre": "Padre de prueba" });
     expect(paciente.prefactura).toHaveBeenCalledTimes(2);
   });

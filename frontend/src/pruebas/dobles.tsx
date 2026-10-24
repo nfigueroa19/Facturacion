@@ -1,11 +1,13 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import { App, type Clientes } from "../App";
 import type { ClienteFacturador } from "../api/clienteFacturador";
 import type { ClientePaciente } from "../api/clientePaciente";
 import type { ClientePersonal } from "../api/clientePersonal";
 import type { ClientePruebas } from "../api/clientePruebas";
-import type { CatalogoPruebas, DetalleSolicitud, PrefacturaPaciente, ResumenSolicitud, Turno } from "../api/tipos";
+import type { PasarelaNavegador } from "../api/pasarelaWompi";
+import type { CatalogoPruebas, CheckoutPago, DetalleSolicitud, PrefacturaPaciente, ResumenSolicitud, Turno } from "../api/tipos";
 import type { ClienteContenido, Textos } from "../contenido/clienteContenido";
 import { ProveedorContenido } from "../contenido/ContenidoContexto";
 
@@ -19,7 +21,6 @@ export const TEXTOS: Textos = {
   "acceso.error-credenciales": "Credenciales erradas de prueba",
   "pasos.continuar": "Continuar",
   "envio.boton": "Enviar solicitud",
-  "copago.pagar": "Pagar {valor}",
   "copago.sin-pagar": "Enviar sin pagar",
   "datos.error.FALTA": "Falta el dato",
   "soportes.AUTORIZACION": "Autorización",
@@ -71,13 +72,47 @@ export const DETALLE: DetalleSolicitud = {
   atencion: { ingreso: null, intentosFallidos: [], factura: null, anulacion: null },
 };
 
+export const CHECKOUT: CheckoutPago = {
+  llavePublica: "pub_test_prueba",
+  referencia: "cita-1_0a0a",
+  montoCentavos: 500_000,
+  moneda: "COP",
+  firma: null,
+  aceptacion: {
+    terminos: { token: "tok-terminos", enlace: "https://wompi.test/reglamento.pdf" },
+    datosPersonales: { token: "tok-datos", enlace: "https://wompi.test/datos.pdf" },
+  },
+};
+
+export function pasarela(cambios: Partial<PasarelaNavegador> = {}): PasarelaNavegador {
+  return {
+    bancosPse: vi.fn(() => Promise.resolve([{ codigo: "1", nombre: "Banco que aprueba" }])),
+    pagar: vi.fn(() => Promise.resolve("tx-1")),
+    ...cambios,
+  };
+}
+
+/** Diligencia el formulario de Wompi con Nequi, acepta los dos contratos y paga. */
+export async function pagarConNequi(celular = "3991111111") {
+  await userEvent.click(await screen.findByRole("radio", { name: "[copago.wompi.medio.NEQUI]" }));
+  await userEvent.type(screen.getByLabelText(/copago\.wompi\.campo\.celular\]/), celular);
+  await userEvent.type(screen.getByLabelText(/copago\.wompi\.campo\.correo\]/), "paciente@example.com");
+  await aceptarContratos();
+  await userEvent.click(screen.getByRole("button", { name: "[copago.wompi.pagar]" }));
+}
+
+export async function aceptarContratos() {
+  await userEvent.click(screen.getByRole("checkbox", { name: "[copago.wompi.aceptacion.terminos]" }));
+  await userEvent.click(screen.getByRole("checkbox", { name: "[copago.wompi.aceptacion.datos]" }));
+}
+
 export function clientePaciente(cambios: Partial<ClientePaciente> = {}): ClientePaciente {
   return {
     iniciarSesion: vi.fn(() => Promise.resolve("token")),
     prefactura: vi.fn(() => Promise.resolve(PREFACTURA)),
     subirSoporte: vi.fn(() => Promise.resolve({ tipo: "cargado" as const })),
-    prepararCopago: vi.fn(() => Promise.resolve({ pasarela: "SIMULADA" as const })),
-    pagarCopago: vi.fn(() => Promise.resolve({ tipo: "pagado" as const, pago: { referencia: "SIM-1", valorPesos: 5000, fecha: "2026-10-22T13:00:00Z" } })),
+    prepararCopago: vi.fn(() => Promise.resolve(CHECKOUT)),
+    pagarCopago: vi.fn(() => Promise.resolve({ tipo: "pagado" as const, pago: { referencia: "tx-1", valorPesos: 5000, fecha: "2026-10-22T13:00:00Z" } })),
     radicar: vi.fn(() => Promise.resolve({ tipo: "radicada" as const, consecutivo: "PF-000001", estado: "EN_REVISION" as const })),
     ...cambios,
   };
@@ -148,7 +183,7 @@ export function montar(opciones: { contenido?: ClienteContenido; clientes?: Part
     facturador: clienteFacturador(),
     personal: clientePersonal(),
     pruebas: clientePruebas(),
-    pasarela: { abrir: vi.fn(() => Promise.resolve()) },
+    pasarela: pasarela(),
     ...opciones.clientes,
   };
   return render(

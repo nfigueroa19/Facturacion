@@ -62,6 +62,9 @@ fun probarModulo(
             "prefactura.persistencia.bucketAppwrite" to BUCKET_APPWRITE_PRUEBA,
             "prefactura.persistencia.intentosAppwrite" to "3",
             "prefactura.persistencia.esperaInicialAppwriteMs" to "1",
+            // Sin Wompi: las pruebas que cobran pasan la base de una imitación local (`WompiDePrueba`).
+            "prefactura.pagos.baseWompi" to "http://127.0.0.1:1",
+            "prefactura.pagos.llavePublicaWompi" to "pub_test_prueba",
         ) + configuracionExtra
         config = MapApplicationConfig(*configuracion.toList().toTypedArray())
     }

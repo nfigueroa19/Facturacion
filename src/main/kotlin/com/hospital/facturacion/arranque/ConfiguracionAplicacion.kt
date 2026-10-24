@@ -33,6 +33,9 @@ data class ConfiguracionSolicitudes(
     val zonaHoraria: ZoneId,
 )
 
+/** La llave pública no es secreta: Wompi la publica en el navegador de cada pagador. */
+data class ConfiguracionPagos(val baseWompi: String, val llavePublicaWompi: String)
+
 data class ConfiguracionAplicacion(
     val contenido: ConfiguracionContenido,
     val solicitudes: ConfiguracionSolicitudes,
@@ -40,6 +43,7 @@ data class ConfiguracionAplicacion(
     val secretos: ConfiguracionSecretos,
     val baseDatos: ConfiguracionBaseDatos,
     val persistencia: ConfiguracionPersistencia,
+    val pagos: ConfiguracionPagos,
 )
 
 fun ApplicationConfig.configuracionAplicacion(): ConfiguracionAplicacion {
@@ -78,6 +82,7 @@ fun ApplicationConfig.configuracionAplicacion(): ConfiguracionAplicacion {
             intentosAppwrite = valor("persistencia.intentosAppwrite").toInt(),
             esperaInicialAppwrite = Duration.ofMillis(valor("persistencia.esperaInicialAppwriteMs").toLong()),
         ),
+        pagos = ConfiguracionPagos(baseWompi = valor("pagos.baseWompi"), llavePublicaWompi = valor("pagos.llavePublicaWompi")),
     )
 }
 

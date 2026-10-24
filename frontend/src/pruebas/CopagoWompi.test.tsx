@@ -2,56 +2,87 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { ClientePaciente } from "../api/clientePaciente";
-import type { PasarelaNavegador } from "../api/pasarelaWompi";
-import type { CheckoutPago } from "../api/tipos";
-import { clientePaciente, montar, PREFACTURA } from "./dobles";
+import { ErrorWompi, type PasarelaNavegador } from "../api/pasarelaWompi";
+import { aceptarContratos, CHECKOUT, clientePaciente, montar, pagarConNequi, pasarela, PREFACTURA } from "./dobles";
 
-const CHECKOUT: CheckoutPago = { llavePublica: "pub_test_prueba", referencia: "cita-1_0a0a", montoCentavos: 500_000, moneda: "COP", firma: "f".repeat(64) };
-const prepararCopago = () => Promise.resolve({ pasarela: "CHECKOUT" as const, checkout: CHECKOUT });
 const conSoportes = () => Promise.resolve({ ...PREFACTURA, soportes: ["AUTORIZACION" as const, "ORDEN_MEDICA" as const] });
 
-async function irAlCopago(pagarCopago: ClientePaciente["pagarCopago"], pasarela: PasarelaNavegador) {
-  montar({ clientes: { paciente: clientePaciente({ prepararCopago, pagarCopago, prefactura: conSoportes }), pasarela } });
+async function irAlCopago(cambios: Partial<ClientePaciente>, navegador: PasarelaNavegador) {
+  const paciente = clientePaciente({ prefactura: conSoportes, ...cambios });
+  montar({ clientes: { paciente, pasarela: navegador } });
   await userEvent.type(await screen.findByLabelText(/Identificación de prueba/), "1000000001");
   await userEvent.type(screen.getByLabelText(/ID de prueba/), "PRUEBA1");
   await userEvent.click(screen.getByRole("button", { name: "Ingresar" }));
   await userEvent.type(await screen.findByLabelText(/Nombre del padre/), "Padre");
   await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
   await userEvent.click(await screen.findByRole("button", { name: "Continuar" }));
+  return paciente;
 }
 
+const campo = (nombre: string) => screen.getByLabelText(new RegExp(`copago\\.wompi\\.campo\\.${nombre}\\]`));
+
 describe("Copago con Wompi sandbox", () => {
-  it("abre el widget con los parámetros firmados y verifica en el backend la transacción que Wompi entrega", async () => {
+  it("paga con tarjeta, muestra el rechazo y reintenta con un checkout nuevo en cada intento", async () => {
     const pagarCopago = vi
       .fn<ClientePaciente["pagarCopago"]>()
       .mockResolvedValueOnce({ tipo: "rechazado", motivo: "RECHAZADA" })
-      .mockResolvedValueOnce({ tipo: "pagado", pago: { referencia: "15113-2", valorPesos: 5000, fecha: "2026-10-24T13:00:00Z" } });
-    let transaccion = 0;
-    const abrir = vi.fn((_checkout: CheckoutPago, alTerminar: (id: string) => void) => {
-      alTerminar(`15113-${++transaccion}`);
-      return Promise.resolve();
-    });
-    await irAlCopago(pagarCopago, { abrir });
+      .mockResolvedValueOnce({ tipo: "pagado", pago: { referencia: "tx-2", valorPesos: 5000, fecha: "2026-10-24T13:00:00Z" } });
+    const navegador = pasarela({ pagar: vi.fn<PasarelaNavegador["pagar"]>().mockResolvedValueOnce("tx-1").mockResolvedValueOnce("tx-2") });
+    const paciente = await irAlCopago({ pagarCopago }, navegador);
 
-    await userEvent.click(await screen.findByRole("button", { name: "[copago.wompi.pagar]" }));
+    await userEvent.type(await screen.findByLabelText(/copago\.wompi\.campo\.numero\]/), "4242 4242 4242 4242");
+    await userEvent.type(campo("titular"), "Paciente Prueba");
+    await userEvent.type(campo("mes"), "5");
+    await userEvent.type(campo("anio"), "29");
+    await userEvent.type(campo("cvc"), "123");
+    await userEvent.type(campo("correo"), "paciente@example.com");
+    await aceptarContratos();
+    await userEvent.click(screen.getByRole("button", { name: "[copago.wompi.pagar]" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("[copago.rechazo.RECHAZADA]");
-    expect(abrir).toHaveBeenLastCalledWith(CHECKOUT, expect.any(Function));
+    const tarjeta = { tipo: "CARD", numero: "4242424242424242", titular: "Paciente Prueba", mes: "05", anio: "29", cvc: "123" };
+    expect(navegador.pagar).toHaveBeenLastCalledWith(CHECKOUT, tarjeta, "paciente@example.com");
+
     await userEvent.click(screen.getByRole("button", { name: "[copago.wompi.pagar]" }));
     expect(await screen.findByRole("button", { name: "Enviar solicitud" })).toBeInTheDocument();
-    expect(pagarCopago).toHaveBeenLastCalledWith("token", "15113-2");
+    expect(pagarCopago).toHaveBeenLastCalledWith("token", "tx-2");
+    expect(paciente.prepararCopago).toHaveBeenCalledTimes(3);
   });
 
-  it("si el widget no carga, avisa y deja reintentar sin llamar al backend", async () => {
+  it("no crea la transacción sin aceptar los dos contratos de Wompi", async () => {
+    const navegador = pasarela();
+    await irAlCopago({}, navegador);
+    await userEvent.click(await screen.findByRole("radio", { name: "[copago.wompi.medio.NEQUI]" }));
+    await userEvent.type(campo("celular"), "3991111111");
+    await userEvent.type(campo("correo"), "paciente@example.com");
+    await userEvent.click(screen.getByRole("checkbox", { name: "[copago.wompi.aceptacion.terminos]" }));
+    await userEvent.click(screen.getByRole("button", { name: "[copago.wompi.pagar]" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("[copago.wompi.aceptacion.falta]");
+    expect(navegador.pagar).not.toHaveBeenCalled();
+    expect(screen.getByRole("link", { name: "[copago.wompi.aceptacion.leer-datos]" })).toHaveAttribute("href", "https://wompi.test/datos.pdf");
+  });
+
+  it("distingue los datos rechazados por Wompi de una falla de conexión y no llama al backend", async () => {
     const pagarCopago = vi.fn<ClientePaciente["pagarCopago"]>();
-    await irAlCopago(pagarCopago, { abrir: () => Promise.reject(new Error("sin red")) });
-    await userEvent.click(await screen.findByRole("button", { name: "[copago.wompi.pagar]" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("[copago.wompi.error]");
-    expect(screen.getByRole("button", { name: "[copago.wompi.pagar]" })).toBeEnabled();
+    const pagar = vi.fn<PasarelaNavegador["pagar"]>().mockRejectedValueOnce(new ErrorWompi("422")).mockRejectedValueOnce(new TypeError("sin red"));
+    await irAlCopago({ pagarCopago }, pasarela({ pagar }));
+    await pagarConNequi();
+    expect(await screen.findByRole("alert")).toHaveTextContent("[copago.wompi.datos-invalidos]");
+    await userEvent.click(screen.getByRole("button", { name: "[copago.wompi.pagar]" }));
+    expect(await screen.findByText("[copago.wompi.error]")).toBeInTheDocument();
     expect(pagarCopago).not.toHaveBeenCalled();
   });
 
+  it("con PSE carga los bancos del sandbox con la llave pública del checkout", async () => {
+    const navegador = pasarela();
+    await irAlCopago({}, navegador);
+    await userEvent.click(await screen.findByRole("radio", { name: "[copago.wompi.medio.PSE]" }));
+    await userEvent.click(await screen.findByRole("button", { name: /copago\.wompi\.campo\.banco\]/ }));
+    expect(await screen.findByRole("option", { name: "Banco que aprueba" })).toBeInTheDocument();
+    expect(navegador.bancosPse).toHaveBeenCalledWith("pub_test_prueba");
+  });
+
   it("la ayuda lista las tarjetas y los celulares de prueba de Wompi y se cierra con Escape", async () => {
-    await irAlCopago(vi.fn<ClientePaciente["pagarCopago"]>(), { abrir: () => Promise.resolve() });
+    await irAlCopago({}, pasarela());
     await userEvent.click(await screen.findByRole("button", { name: "[copago.wompi.ayuda.abrir]" }));
     const dialogo = await screen.findByRole("dialog");
     expect(within(dialogo).getByText("4242 4242 4242 4242")).toBeInTheDocument();

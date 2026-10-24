@@ -49,17 +49,24 @@ export interface Pago {
   readonly fecha: string;
 }
 
-/** Parámetros firmados por el backend para abrir el widget de Wompi; el secreto de integridad nunca llega aquí. */
+/** Contrato de Wompi que el pagador acepta. El token sirve para una sola transacción. */
+export interface ContratoWompi {
+  readonly token: string;
+  readonly enlace: string;
+}
+
+/**
+ * Parámetros del backend para crear la transacción en Wompi. `firma` es null si el comercio no exige firma de
+ * integridad; el secreto nunca llega aquí.
+ */
 export interface CheckoutPago {
   readonly llavePublica: string;
   readonly referencia: string;
   readonly montoCentavos: number;
   readonly moneda: string;
-  readonly firma: string;
+  readonly firma: string | null;
+  readonly aceptacion: { readonly terminos: ContratoWompi; readonly datosPersonales: ContratoWompi };
 }
-
-/** SIMULADA mientras el backend no tenga las llaves de Wompi; CHECKOUT abre el widget de Wompi sandbox. */
-export type IntencionPago = { readonly pasarela: "SIMULADA" } | { readonly pasarela: "CHECKOUT"; readonly checkout: CheckoutPago };
 
 export interface Novedad {
   readonly descripcion: string;
@@ -118,7 +125,7 @@ export interface DetalleSolicitud {
 }
 
 export type MotivoRechazoAtencion = "ESTADO_NO_PERMITE" | "SIN_INGRESO" | "INGRESO_YA_REGISTRADO" | "FUERA_DEL_DIA_DE_LA_CITA";
-export type MotivoRechazoPago = "RECHAZADA" | "FONDOS_INSUFICIENTES" | "ERROR_PASARELA" | "MEDIO_INVALIDO";
+export type MotivoRechazoPago = "RECHAZADA" | "ERROR_PASARELA" | "MEDIO_INVALIDO";
 
 export type ErrorNuevaCita = "IDENTIFICACION" | "CELULAR" | "FECHA" | "MEDICO" | "ESPECIALIDAD" | "COPAGO";
 

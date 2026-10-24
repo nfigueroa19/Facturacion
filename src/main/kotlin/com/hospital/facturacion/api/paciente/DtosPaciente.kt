@@ -5,6 +5,7 @@ import com.hospital.facturacion.api.prefactura.CitaDto
 import com.hospital.facturacion.api.prefactura.NovedadDto
 import com.hospital.facturacion.api.prefactura.PagoDto
 import com.hospital.facturacion.api.prefactura.aDto
+import com.hospital.facturacion.domain.copago.ContratoPasarela
 import com.hospital.facturacion.domain.copago.IntencionPago
 import com.hospital.facturacion.domain.formulario.ErrorCampo
 import com.hospital.facturacion.domain.formulario.FormularioPrefactura
@@ -39,18 +40,26 @@ data class PrefacturaPacienteDto(
     val tamanoMaximoSoporteBytes: Int,
 )
 
-/** ID de la transacción del checkout o token de la tarjeta de prueba; nunca el número de la tarjeta. */
+/** ID de la transacción que el navegador creó en Wompi; nunca el número de la tarjeta. */
 @Serializable
 data class MedioPagoDto(val token: String)
 
-enum class TipoPasarelaDto { SIMULADA, CHECKOUT }
-
-/** `checkout` solo llega con la pasarela CHECKOUT: los parámetros firmados para abrir el widget en el navegador. */
+/** Parámetros para crear la transacción en Wompi desde el navegador. `firma` es null si el comercio no la exige. */
 @Serializable
-data class IntencionPagoDto(val pasarela: TipoPasarelaDto, val checkout: CheckoutDto? = null)
+data class CheckoutDto(
+    val llavePublica: String,
+    val referencia: String,
+    val montoCentavos: Long,
+    val moneda: String,
+    val firma: String?,
+    val aceptacion: AceptacionDto,
+)
 
 @Serializable
-data class CheckoutDto(val llavePublica: String, val referencia: String, val montoCentavos: Long, val moneda: String, val firma: String)
+data class AceptacionDto(val terminos: ContratoDto, val datosPersonales: ContratoDto)
+
+@Serializable
+data class ContratoDto(val token: String, val enlace: String)
 
 @Serializable
 data class DatosPacienteDto(val datos: Map<String, String>)
@@ -73,7 +82,13 @@ fun PrefacturaPaciente.aDto(formulario: FormularioPrefactura, tamanoMaximoSoport
 private fun SolicitudPrefactura.aDtoPaciente() =
     SolicitudPacienteDto(consecutivo.valor, estado, fechaEnvio.toString(), datos.valores, novedades.map { it.aDto() })
 
-fun IntencionPago.aDto() = when (this) {
-    IntencionPago.Simulada -> IntencionPagoDto(TipoPasarelaDto.SIMULADA)
-    is IntencionPago.Checkout -> IntencionPagoDto(TipoPasarelaDto.CHECKOUT, CheckoutDto(llavePublica, referencia, montoCentavos, moneda, firma))
-}
+fun IntencionPago.aDto() = CheckoutDto(
+    llavePublica,
+    referencia,
+    montoCentavos,
+    moneda,
+    firma,
+    AceptacionDto(aceptacion.terminos.aDto(), aceptacion.datosPersonales.aDto()),
+)
+
+private fun ContratoPasarela.aDto() = ContratoDto(token, enlace)

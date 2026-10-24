@@ -44,7 +44,7 @@ fun Application.moduloCon(entorno: (String) -> String?) {
     monitor.subscribe(ApplicationStopped) { http.close() }
     val canalSms = abrirCanalSms(secretos, http, log)
     val notificador = NotificarPorSms(canalSms, persistencia.comunicaciones, PlantillasSmsContenido(contenido.fuente), reloj)
-    val pasarela = abrirPasarelaCopago(secretos, http, aleatorio, log)
+    val pasarela = abrirPasarelaCopago(configuracion.pagos, secretos, http, aleatorio, log)
     val prefactura = ComposicionPrefactura(configuracion.solicitudes, persistencia, notificador, pasarela, reloj, aleatorio)
     val pruebas = catalogo?.let { abrirPruebas(it, persistencia, reloj, log) }
     instalarPlataforma(configuracion.origenesCors)

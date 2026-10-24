@@ -1,18 +1,17 @@
 import { Alert, Skeleton } from "@heroui/react";
 import type { PasarelaNavegador } from "../../api/pasarelaWompi";
-import type { IntencionPago, Pago } from "../../api/tipos";
+import type { CheckoutPago, Pago } from "../../api/tipos";
 import { ErrorCarga } from "../../componentes/ErrorCarga";
 import type { Texto } from "../../contenido/ContenidoContexto";
 import { conValores, pesos } from "../../formato";
 import { useCarga } from "../../useCarga";
-import { PagoSimulado } from "./PagoSimulado";
 import { PagoWompi } from "./PagoWompi";
 
 interface Props {
   readonly valor: number;
   readonly pago: Pago | null;
   readonly texto: Texto;
-  readonly preparar: () => Promise<IntencionPago>;
+  readonly preparar: () => Promise<CheckoutPago>;
   /** Devuelve null si el pago quedó aprobado, o la clave del texto que explica el rechazo. */
   readonly pagar: (medio: string) => Promise<string | null>;
   readonly pasarela: PasarelaNavegador;
@@ -43,7 +42,7 @@ export function PasoCopago({ valor, pago, texto, preparar, pagar, pasarela }: Pr
   );
 }
 
-/** El backend decide la pasarela: Wompi sandbox si tiene sus llaves, la simulada si no. */
+/** El primer checkout trae la llave pública y los enlaces de los contratos que el pagador acepta en el formulario. */
 function MedioDePago({ valor, texto, preparar, pagar, pasarela }: Omit<Props, "pago">) {
   const { carga, recargar } = useCarga(() => preparar(), []);
   switch (carga.tipo) {
@@ -57,10 +56,6 @@ function MedioDePago({ valor, texto, preparar, pagar, pasarela }: Omit<Props, "p
     case "error":
       return <ErrorCarga texto={texto} titulo="copago.medio.error" onReintentar={recargar} />;
     case "lista":
-      return carga.valor.pasarela === "CHECKOUT" ? (
-        <PagoWompi valor={valor} texto={texto} preparar={preparar} pagar={pagar} pasarela={pasarela} />
-      ) : (
-        <PagoSimulado valor={valor} texto={texto} pagar={pagar} />
-      );
+      return <PagoWompi valor={valor} checkout={carga.valor} texto={texto} preparar={preparar} pagar={pagar} pasarela={pasarela} />;
   }
 }

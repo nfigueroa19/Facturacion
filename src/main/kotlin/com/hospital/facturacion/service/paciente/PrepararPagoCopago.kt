@@ -14,6 +14,6 @@ class PrepararPagoCopago(
     fun ejecutar(cita: Cita): ResultadoPreparacion {
         val copago = cita.copago ?: return ResultadoPago.SinCopago
         impedimentoDeCobro(cita, solicitudes, pagos)?.let { return it }
-        return ResultadoPreparacion.Lista(checkout.preparar(cita, copago))
+        return checkout.preparar(cita, copago)?.let(ResultadoPreparacion::Lista) ?: ResultadoPreparacion.PasarelaNoDisponible
     }
 }

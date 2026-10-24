@@ -46,7 +46,7 @@ Módulos del personal: facturación (`http://localhost:5173/facturador`), call c
 
 El call center crea citas nuevas con su ID de acceso. Los SMS se simulan y se leen con el botón "Comunicaciones" de los módulos del personal. Los textos de los SMS están en `config/contenido.json`, claves `sms.CITA_ASIGNADA`, `sms.SOLICITUD_RADICADA` y `sms.NOVEDAD_REGISTRADA`.
 
-El copago se paga con tarjetas de prueba y no cobra dinero: `4242 4242 4242 4242` aprueba; las demás opciones muestran un rechazo para probar el reintento.
+El copago se paga en el sandbox de Wompi y no cobra dinero. Tarjeta `4242 4242 4242 4242` aprueba y `4111 1111 1111 1111` rechaza (vencimiento futuro, CVC de 3 dígitos, nombre de al menos 5 letras). Nequi `3991111111` aprueba y `3992222222` rechaza. En PSE se elige "Banco que aprueba" o "Banco que declina". El botón "Ver datos de prueba de Wompi" de la pantalla de pago repite esta lista.
 
 El ingreso y la factura solo se registran el día de la cita: use la cita de `1000000001` o cree una para hoy desde el call center. Las solicitudes, los PDF, los pagos y los facturadores se guardan en PostgreSQL y siguen ahí después de reiniciar el servidor. Las sesiones se guardan en memoria: tras un reinicio hay que volver a ingresar.
 

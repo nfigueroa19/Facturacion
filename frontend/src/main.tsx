@@ -18,7 +18,7 @@ const clientes = {
   facturador: clienteFacturadorHttp(URL_API),
   personal: clientePersonalHttp(URL_API),
   pruebas: clientePruebasHttp(URL_API),
-  pasarela: pasarelaWompi,
+  pasarela: pasarelaWompi(),
 };
 
 const raiz = document.getElementById("raiz");

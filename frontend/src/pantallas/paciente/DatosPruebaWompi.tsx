@@ -22,7 +22,7 @@ const NEQUI: readonly DatoPrueba[] = [
   { valor: null, resultado: "ERROR" },
 ];
 
-/** El widget de Wompi tapa la página: el paciente consulta aquí los datos antes de abrirlo. */
+/** Datos de prueba del sandbox en un diálogo, para consultarlos sin salir del formulario de pago. */
 export function DatosPruebaWompi({ texto }: { texto: Texto }) {
   return (
     <Modal>

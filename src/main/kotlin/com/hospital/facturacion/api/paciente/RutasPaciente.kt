@@ -95,6 +95,7 @@ private suspend fun pagarCopago(call: ApplicationCall, casos: CasosPaciente, cit
 
 private suspend fun ApplicationCall.responderPreparacion(resultado: ResultadoPreparacion) = when (resultado) {
     is ResultadoPreparacion.Lista -> respond(resultado.intencion.aDto())
+    ResultadoPreparacion.PasarelaNoDisponible -> responderError(HttpStatusCode.ServiceUnavailable, "pasarela-no-disponible")
     is ImpedimentoPago -> responderImpedimento(resultado)
 }
 

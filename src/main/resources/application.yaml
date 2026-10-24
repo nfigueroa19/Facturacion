@@ -50,3 +50,8 @@ prefactura:
     # en cada intento: con 4 intentos y 250 ms se espera 250, 500 y 1000 ms antes de fallar.
     intentosAppwrite: "$HSLV_APPWRITE_INTENTOS:4"
     esperaInicialAppwriteMs: "$HSLV_APPWRITE_ESPERA_MS:250"
+  pagos:
+    baseWompi: "$HSLV_WOMPI_BASE:https://sandbox.wompi.co"
+    # Llave de pruebas de "Tienda Wompi", el comercio de demostración del sandbox: permite pagar sin cuenta propia y no
+    # exige firma de integridad. Con un comercio propio se cambia aquí y se guarda wompi.integridad en el almacén.
+    llavePublicaWompi: "$HSLV_WOMPI_LLAVE_PUBLICA:pub_test_Q5yDA9xoKdePzhSGeVe9HAez7HgGORGf"
