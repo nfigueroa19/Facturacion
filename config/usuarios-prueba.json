@@ -48,8 +48,8 @@
       "etapa": "SIN_RADICAR",
       "pasos": [
         "Ingrese en / y llegue al paso del copago.",
-        "Pague con una tarjeta de rechazo: la pantalla muestra el motivo y permite reintentar.",
-        "Pague con 4242 4242 4242 4242: queda aprobado y puede radicar."
+        "Pague con la tarjeta 4111 1111 1111 1111 o con Nequi 3992222222: Wompi rechaza, la pantalla muestra el motivo y permite reintentar.",
+        "Pague con 4242 4242 4242 4242 (vencimiento futuro, CVC 123): queda aprobado y puede radicar."
       ]
     },
     {
