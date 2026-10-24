@@ -29,7 +29,7 @@ data class FilaCita(
 )
 
 /** Agenda de prueba en Appwrite. En producción la reemplaza el adaptador al sistema del call center o a Dinámica (P-12). */
-class AgendaCitasAppwrite(private val citas: TablaAppwrite<FilaCita>) : AgendaCitas, RegistroCitas {
+class AgendaCitasAppwrite(private val citas: TablaAppwrite<FilaCita>) : AgendaCitas, RegistroCitas, BorradoPorCita {
     override fun registrar(cita: Cita, codigoAcceso: String) = citas.guardar(idAppwrite(cita.id.valor), cita.fila(codigoAcceso))
 
     override fun buscar(id: CitaId): Cita? = citas.leer(idAppwrite(id.valor))?.cita()
@@ -41,6 +41,8 @@ class AgendaCitasAppwrite(private val citas: TablaAppwrite<FilaCita>) : AgendaCi
 
     override fun buscarPorIdentificacion(identificacion: String): List<Cita> =
         citas.buscar(igual("identificacion", identificacion)).map { it.cita() }
+
+    override fun eliminar(cita: CitaId) = citas.eliminar(idAppwrite(cita.valor))
 }
 
 /** Crea o actualiza las citas del archivo de arranque con la fecha calculada para hoy. */

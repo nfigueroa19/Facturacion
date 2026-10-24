@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ClientePaciente } from "../../api/clientePaciente";
 import { esSesionVencida } from "../../api/http";
+import type { CatalogoPruebas } from "../../api/tipos";
 import { admiteCambiosDelPaciente } from "../../api/tipos";
+import { DatosPrueba } from "../../componentes/DatosPrueba";
 import { ErrorCarga } from "../../componentes/ErrorCarga";
 import { EsqueletoAcceso } from "../../componentes/EsqueletoAcceso";
 import type { Texto } from "../../contenido/ContenidoContexto";
@@ -11,7 +13,13 @@ import { PantallaAcceso, type ResultadoIngreso } from "./PantallaAcceso";
 import { PantallaEstado } from "./PantallaEstado";
 
 /** El token vive solo en memoria: al recargar la página el paciente ingresa de nuevo. */
-export function AppPaciente({ cliente, texto }: { cliente: ClientePaciente; texto: Texto }) {
+interface Props {
+  readonly cliente: ClientePaciente;
+  readonly texto: Texto;
+  readonly catalogo: CatalogoPruebas | null;
+}
+
+export function AppPaciente({ cliente, texto, catalogo }: Props) {
   const [token, setToken] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
 
@@ -32,7 +40,14 @@ export function AppPaciente({ cliente, texto }: { cliente: ClientePaciente; text
     setAviso(motivo);
   }, []);
 
-  if (token === null) return <PantallaAcceso texto={texto} onIngresar={ingresar} aviso={aviso} />;
+  if (token === null) {
+    return (
+      <div className="flex flex-col gap-8">
+        <PantallaAcceso texto={texto} onIngresar={ingresar} aviso={aviso} />
+        {catalogo !== null && <DatosPrueba catalogo={catalogo} texto={texto} pestanaInicial="pacientes" />}
+      </div>
+    );
+  }
   return <SesionPaciente cliente={cliente} token={token} texto={texto} onSalir={salir} />;
 }
 

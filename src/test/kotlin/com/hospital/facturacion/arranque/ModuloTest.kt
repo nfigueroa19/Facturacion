@@ -25,4 +25,9 @@ class ModuloTest {
             listOf("tEXt", "iTXt", "zTXt", "eXIf", "tIME").forEach { assertFalse(bytes.contiene(it), "$clave contiene $it") }
         }
     }
+
+    @Test
+    fun `sin catalogo de pruebas no existen las rutas de escenarios`() = probarModulo(temporal) {
+        assertEquals(HttpStatusCode.NotFound, client.get("/api/dev/catalogo").status)
+    }
 }

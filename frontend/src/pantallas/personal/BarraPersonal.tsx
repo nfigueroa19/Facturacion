@@ -1,9 +1,11 @@
 import { Button } from "@heroui/react";
 import type { SesionFacturador } from "../../api/clienteFacturador";
 import type { ClientePersonal } from "../../api/clientePersonal";
+import type { ClientePruebas } from "../../api/clientePruebas";
 import type { Superficie } from "../../componentes/Marco";
 import type { Texto } from "../../contenido/ContenidoContexto";
 import { PanelComunicaciones } from "./PanelComunicaciones";
+import { RestablecerEscenarios } from "./RestablecerEscenarios";
 
 const SECCIONES = [
   { superficie: "facturador", ruta: "/facturador" },
@@ -15,13 +17,16 @@ interface Props {
   readonly superficie: Exclude<Superficie, "paciente">;
   readonly sesion: SesionFacturador;
   readonly cliente: ClientePersonal;
+  /** Solo cuando el backend publica el catálogo de pruebas: entonces se pueden restablecer. */
+  readonly pruebas: ClientePruebas | null;
   readonly texto: Texto;
   readonly navegar: (ruta: string) => void;
   readonly onSalir: (motivo: string | null) => void;
 }
 
-/** Navegación entre los módulos del personal, panel de comunicaciones y salida. */
-export function BarraPersonal({ superficie, sesion, cliente, texto, navegar, onSalir }: Props) {
+/** Navegación entre los módulos del personal, panel de comunicaciones, restablecimiento de los datos de prueba y salida. */
+export function BarraPersonal({ superficie, sesion, cliente, pruebas, texto, navegar, onSalir }: Props) {
+  const vencida = () => onSalir("facturador.acceso.sesion-vencida");
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
       <nav aria-label={texto("personal.navegacion")}>
@@ -45,7 +50,8 @@ export function BarraPersonal({ superficie, sesion, cliente, texto, navegar, onS
       </nav>
       <div className="flex flex-wrap items-center gap-3 text-sm text-ink-muted">
         <span>{sesion.nombre}</span>
-        <PanelComunicaciones cliente={cliente} token={sesion.token} texto={texto} onSesionVencida={() => onSalir("facturador.acceso.sesion-vencida")} />
+        <PanelComunicaciones cliente={cliente} token={sesion.token} texto={texto} onSesionVencida={vencida} />
+        {pruebas !== null && <RestablecerEscenarios cliente={pruebas} token={sesion.token} texto={texto} onSesionVencida={vencida} />}
         <Button variant="outline" size="sm" onPress={() => onSalir(null)}>
           {texto("facturador.salir")}
         </Button>

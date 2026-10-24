@@ -1,6 +1,7 @@
 package com.hospital.facturacion.arranque
 
 import com.hospital.facturacion.data.appwrite.ClienteAppwrite
+import com.hospital.facturacion.data.appwrite.ReintentosAppwrite
 import com.hospital.facturacion.data.appwrite.TablaAppwrite
 import com.hospital.facturacion.data.cita.AgendaCitasAppwrite
 import com.hospital.facturacion.data.cita.FilaCita
@@ -25,6 +26,7 @@ import com.hospital.facturacion.data.secretos.FuenteSecretos
 import com.hospital.facturacion.data.soporte.AlmacenSoportesAppwrite
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
+import org.slf4j.Logger
 import java.net.URI
 import java.net.http.HttpClient
 import java.time.Duration
@@ -39,24 +41,31 @@ fun persistenciaAppwrite(
     secretos: FuenteSecretos?,
     datos: DatosPrueba,
     tamanoMaximoSoporteBytes: Int,
+    registro: Logger,
 ): Persistencia {
     val http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build()
     val cliente = abrirClienteAppwrite(secretos, http)
-    fun <F> tabla(nombre: String, forma: KSerializer<F>) = TablaAppwrite(cliente, configuracion.baseDatosAppwrite, nombre, forma)
+    val reintentos = ReintentosAppwrite(configuracion.intentosAppwrite, configuracion.esperaInicialAppwrite, Thread::sleep, registro)
+    fun <F> tabla(nombre: String, forma: KSerializer<F>) = TablaAppwrite(cliente, configuracion.baseDatosAppwrite, nombre, forma, reintentos)
     val citas = tabla("citas", FilaCita.serializer()).also { sembrarCitas(it, datos.citas) }
     val usuarios = tabla("usuarios", FilaUsuario.serializer()).also { sembrarFacturadores(it, datos.facturadores) }
     val consecutivos = tabla("consecutivos", FilaConsecutivo.serializer()).also(::prepararConsecutivo).also(::prepararTurnos)
     val agenda = AgendaCitasAppwrite(citas)
+    val solicitudes = SolicitudPrefacturaRepositorioAppwrite(tabla("solicitudes", FilaSolicitud.serializer()), tabla("novedades", FilaNovedad.serializer()), Json)
+    val pagos = PagosCopagoAppwrite(tabla("pagos_copago", FilaPago.serializer()))
+    val soportes = AlmacenSoportesAppwrite(cliente, configuracion.bucketAppwrite, tamanoMaximoSoporteBytes)
     return Persistencia(
         agenda = agenda,
         registroCitas = agenda,
-        solicitudes = SolicitudPrefacturaRepositorioAppwrite(tabla("solicitudes", FilaSolicitud.serializer()), tabla("novedades", FilaNovedad.serializer()), Json),
-        pagos = PagosCopagoAppwrite(tabla("pagos_copago", FilaPago.serializer())),
+        solicitudes = solicitudes,
+        pagos = pagos,
         consecutivo = GeneradorConsecutivoAppwrite(consecutivos),
         facturadores = DirectorioFacturadoresAppwrite(usuarios, ClavePbkdf2()),
-        soportes = AlmacenSoportesAppwrite(cliente, configuracion.bucketAppwrite, tamanoMaximoSoporteBytes),
+        soportes = soportes,
         comunicaciones = BandejaComunicacionesAppwrite(tabla("comunicaciones", FilaComunicacion.serializer())),
         turnos = GeneradorTurnosAppwrite(consecutivos),
+        // La cita se borra al final: si la limpieza se interrumpe, restablecer la vuelve a encontrar por identificación.
+        borrado = { cita -> listOf(solicitudes, pagos, soportes, agenda).forEach { it.eliminar(cita) } },
         cerrar = http::close,
     )
 }

@@ -3,6 +3,7 @@ package com.hospital.facturacion.data.soporte
 import com.hospital.facturacion.data.appwrite.ClienteAppwrite
 import com.hospital.facturacion.data.appwrite.FormularioArchivo
 import com.hospital.facturacion.data.appwrite.idAppwrite
+import com.hospital.facturacion.data.cita.BorradoPorCita
 import com.hospital.facturacion.domain.cita.CitaId
 import com.hospital.facturacion.domain.soporte.AlmacenSoportes
 import com.hospital.facturacion.domain.soporte.DocumentoPdf
@@ -19,7 +20,7 @@ class AlmacenSoportesAppwrite(
     private val cliente: ClienteAppwrite,
     bucket: String,
     private val tamanoMaximoBytes: Int,
-) : AlmacenSoportes {
+) : AlmacenSoportes, BorradoPorCita {
     private val archivos = "/storage/buckets/$bucket/files"
 
     init {
@@ -28,7 +29,7 @@ class AlmacenSoportesAppwrite(
 
     override fun guardar(cita: CitaId, tipo: TipoSoporte, pdf: DocumentoPdf) {
         val id = idArchivo(cita, tipo)
-        cliente.enviar("$archivos/$id", BodyHandlers.discarding(), 204, 404) { DELETE() }
+        borrar(id)
         val formulario = FormularioArchivo(id, "${cita.valor}-${tipo.name.lowercase()}.pdf", "application/pdf", pdf.contenido)
         cliente.enviar(archivos, BodyHandlers.discarding(), 201) {
             header("Content-Type", formulario.tipoContenido).POST(BodyPublishers.ofByteArray(formulario.cuerpo))
@@ -43,6 +44,12 @@ class AlmacenSoportesAppwrite(
 
     override fun cargados(cita: CitaId): Set<TipoSoporte> = TipoSoporte.entries.filterTo(mutableSetOf()) {
         cliente.enviar("$archivos/${idArchivo(cita, it)}", BodyHandlers.discarding(), 200, 404) { GET() }.statusCode() == 200
+    }
+
+    override fun eliminar(cita: CitaId) = TipoSoporte.entries.forEach { borrar(idArchivo(cita, it)) }
+
+    private fun borrar(id: String) {
+        cliente.enviar("$archivos/$id", BodyHandlers.discarding(), 204, 404) { DELETE() }
     }
 }
 

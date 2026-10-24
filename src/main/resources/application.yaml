@@ -17,6 +17,9 @@ prefactura:
     # Datos ficticios del piloto. Se reemplazan por los adaptadores reales (call center, usuarios del hospital).
     citasPrueba: "$HSLV_CITAS_PRUEBA:config/citas-prueba.json"
     facturadoresPrueba: "$HSLV_FACTURADORES_PRUEBA:config/facturadores-prueba.json"
+    # Vacío: sin escenarios de prueba. Con `config/usuarios-prueba.json`: siembra los escenarios (solo con Appwrite),
+    # publica el catálogo en GET /api/dev/catalogo y permite restablecerlos con POST /api/dev/poblar.
+    catalogoPruebas: "$HSLV_CATALOGO_PRUEBAS:"
     # Límite técnico mientras se define P-08.
     tamanoMaximoSoporteBytes: "$HSLV_TAMANO_MAXIMO_SOPORTE:5242880"
     minutosSesion: "$HSLV_MINUTOS_SESION:480"
@@ -43,3 +46,7 @@ prefactura:
     destino: "$HSLV_PERSISTENCIA:postgres"
     baseDatosAppwrite: "$HSLV_APPWRITE_BASE:facturacion_db"
     bucketAppwrite: "$HSLV_APPWRITE_BUCKET:soportes_pdf"
+    # Intentos ante fallas transitorias de Appwrite (sin respuesta, 429, 5xx, `{}` al guardar). La espera se duplica
+    # en cada intento: con 4 intentos y 250 ms se espera 250, 500 y 1000 ms antes de fallar.
+    intentosAppwrite: "$HSLV_APPWRITE_INTENTOS:4"
+    esperaInicialAppwriteMs: "$HSLV_APPWRITE_ESPERA_MS:250"

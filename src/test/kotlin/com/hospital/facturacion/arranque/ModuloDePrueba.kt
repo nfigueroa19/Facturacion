@@ -43,6 +43,7 @@ fun probarModulo(
             "prefactura.solicitudes.formulario" to "config/formulario-prefactura.json",
             "prefactura.solicitudes.citasPrueba" to "config/citas-prueba.json",
             "prefactura.solicitudes.facturadoresPrueba" to "config/facturadores-prueba.json",
+            "prefactura.solicitudes.catalogoPruebas" to "",
             "prefactura.solicitudes.tamanoMaximoSoporteBytes" to "1024",
             "prefactura.solicitudes.minutosSesion" to "30",
             "prefactura.solicitudes.zonaHoraria" to "America/Bogota",
@@ -59,6 +60,8 @@ fun probarModulo(
             "prefactura.persistencia.destino" to "postgres",
             "prefactura.persistencia.baseDatosAppwrite" to BASE_APPWRITE_PRUEBA,
             "prefactura.persistencia.bucketAppwrite" to BUCKET_APPWRITE_PRUEBA,
+            "prefactura.persistencia.intentosAppwrite" to "3",
+            "prefactura.persistencia.esperaInicialAppwriteMs" to "1",
         ) + configuracionExtra
         config = MapApplicationConfig(*configuracion.toList().toTypedArray())
     }

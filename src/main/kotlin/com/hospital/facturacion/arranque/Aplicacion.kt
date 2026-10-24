@@ -6,14 +6,19 @@ import com.hospital.facturacion.api.paciente.rutasPaciente
 import com.hospital.facturacion.api.personal.rutasPersonal
 import com.hospital.facturacion.api.plataforma.instalarAutenticacion
 import com.hospital.facturacion.api.plataforma.instalarPlataforma
+import com.hospital.facturacion.api.pruebas.rutasPruebas
 import com.hospital.facturacion.api.salud.rutasSalud
 import com.hospital.facturacion.data.comunicacion.PlantillasSmsContenido
+import com.hospital.facturacion.data.facturador.GeneradorHashPbkdf2
+import com.hospital.facturacion.data.pruebas.facturadores
+import com.hospital.facturacion.data.pruebas.leerCatalogoPruebas
 import com.hospital.facturacion.service.comunicacion.NotificarPorSms
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.application.log
 import io.ktor.server.netty.EngineMain
 import io.ktor.server.routing.routing
+import kotlinx.serialization.json.Json
 import java.net.http.HttpClient
 import java.security.SecureRandom
 import java.time.Clock
@@ -28,7 +33,10 @@ fun Application.moduloCon(entorno: (String) -> String?) {
     val configuracion = environment.config.configuracionAplicacion()
     val secretos = abrirSecretos(configuracion.secretos, entorno, log)
     val reloj = Clock.system(configuracion.solicitudes.zonaHoraria)
-    val persistencia = abrirPersistencia(configuracion, secretos, reloj)
+    val aleatorio = SecureRandom()
+    val catalogo = configuracion.solicitudes.catalogoPruebas?.let { leerCatalogoPruebas(it, Json) }
+    val personalPruebas = catalogo?.facturadores(GeneradorHashPbkdf2(aleatorio)).orEmpty()
+    val persistencia = abrirPersistencia(configuracion, secretos, reloj, personalPruebas, log)
     monitor.subscribe(ApplicationStopped) { persistencia.cerrar() }
     log.info("Persistencia en {}", configuracion.persistencia.destino)
     val contenido = ComposicionContenido(configuracion.contenido, log)
@@ -36,7 +44,8 @@ fun Application.moduloCon(entorno: (String) -> String?) {
     monitor.subscribe(ApplicationStopped) { http.close() }
     val canalSms = abrirCanalSms(secretos, http, log)
     val notificador = NotificarPorSms(canalSms, persistencia.comunicaciones, PlantillasSmsContenido(contenido.fuente), reloj)
-    val prefactura = ComposicionPrefactura(configuracion.solicitudes, persistencia, notificador, reloj, SecureRandom())
+    val prefactura = ComposicionPrefactura(configuracion.solicitudes, persistencia, notificador, reloj, aleatorio)
+    val pruebas = catalogo?.let { abrirPruebas(it, persistencia, reloj, log) }
     instalarPlataforma(configuracion.origenesCors)
     instalarAutenticacion(prefactura.sesionesPaciente, prefactura.sesionesFacturador)
     routing {
@@ -45,5 +54,6 @@ fun Application.moduloCon(entorno: (String) -> String?) {
         rutasPaciente(prefactura.casosPaciente())
         rutasFacturador(prefactura.casosFacturador())
         rutasPersonal(prefactura.casosPersonal())
+        pruebas?.let { rutasPruebas(it) }
     }
 }

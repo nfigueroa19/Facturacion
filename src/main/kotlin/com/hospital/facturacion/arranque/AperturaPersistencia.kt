@@ -16,21 +16,29 @@ import com.hospital.facturacion.data.prefactura.SolicitudPrefacturaRepositorioPo
 import com.hospital.facturacion.data.secretos.FuenteSecretos
 import com.hospital.facturacion.data.soporte.AlmacenSoportesPostgres
 import kotlinx.serialization.json.Json
+import org.slf4j.Logger
 import java.time.Clock
 
 /** Citas y facturadores ficticios del piloto, que se siembran en el destino al arrancar. */
 data class DatosPrueba(val citas: List<CitaRegistrada>, val facturadores: List<FacturadorPruebaJson>)
 
 /** Único punto que elige el destino de persistencia; cambiarlo no toca casos de uso ni rutas. */
-fun abrirPersistencia(configuracion: ConfiguracionAplicacion, secretos: FuenteSecretos?, reloj: Clock): Persistencia {
+/** `personalPruebas` son los usuarios del catálogo de pruebas, que se siembran junto con los del archivo de facturadores. */
+fun abrirPersistencia(
+    configuracion: ConfiguracionAplicacion,
+    secretos: FuenteSecretos?,
+    reloj: Clock,
+    personalPruebas: List<FacturadorPruebaJson>,
+    registro: Logger,
+): Persistencia {
     val solicitudes = configuracion.solicitudes
     val datos = DatosPrueba(
         leerCitasPrueba(solicitudes.citasPrueba, Json, reloj),
-        leerFacturadoresPrueba(solicitudes.facturadoresPrueba, Json),
+        leerFacturadoresPrueba(solicitudes.facturadoresPrueba, Json) + personalPruebas,
     )
     return when (configuracion.persistencia.destino) {
         DestinoPersistencia.POSTGRES -> persistenciaPostgres(configuracion.baseDatos, secretos, datos, solicitudes.tamanoMaximoSoporteBytes)
-        DestinoPersistencia.APPWRITE -> persistenciaAppwrite(configuracion.persistencia, secretos, datos, solicitudes.tamanoMaximoSoporteBytes)
+        DestinoPersistencia.APPWRITE -> persistenciaAppwrite(configuracion.persistencia, secretos, datos, solicitudes.tamanoMaximoSoporteBytes, registro)
     }
 }
 
@@ -54,6 +62,7 @@ private fun persistenciaPostgres(
         soportes = AlmacenSoportesPostgres(base, tamanoMaximoSoporteBytes),
         comunicaciones = BandejaComunicacionesPostgres(base),
         turnos = GeneradorTurnosPostgres(base),
+        borrado = null,
         cerrar = base::close,
     )
 }

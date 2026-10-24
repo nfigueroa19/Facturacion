@@ -52,5 +52,14 @@ El ingreso y la factura solo se registran el día de la cita: use la cita de `10
 
 Al arrancar, el servidor copia a la base los usuarios de `config/facturadores-prueba.json`. Si un usuario ya existe, actualiza su nombre y su clave; quitarlo del archivo no lo borra de la base.
 
+## Catálogo de escenarios de prueba
+`config/usuarios-prueba.json` reúne los usuarios del personal (`facturador`, `callcenter` y `digiturno`, clave `prueba123`), diez pacientes con un escenario cada uno (flujo feliz, copago, novedad, revisión, digiturno, anulación, facturación y cita de mañana) y tres identificaciones libres para el call center.
+
+Solo se activa con la variable `HSLV_CATALOGO_PRUEBAS=config/usuarios-prueba.json` y la persistencia en Appwrite. Al arrancar, el servidor crea los escenarios que faltan; los que ya existen solo cambian la fecha de la cita a hoy. La pantalla de acceso muestra el botón "Datos de prueba" con todo el catálogo.
+
+Para dejar todos los escenarios como al principio, use el botón "Restablecer datos de prueba" de los módulos del personal. Borra lo que se hizo con esas identificaciones, incluidas las citas del call center.
+
+Si cambia el archivo, reinicie el servidor. Las identificaciones no se pueden repetir y cada celular debe tener 10 dígitos y empezar por 3.
+
 ## Si algo sale mal
 Si el archivo queda con un error (por ejemplo, falta una coma o unas comillas), la web sigue mostrando la última versión correcta y el servidor deja el motivo en su registro. Corrija el archivo y guárdelo de nuevo.

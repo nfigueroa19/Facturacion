@@ -32,3 +32,6 @@ services:
         value: appwrite.endpoint,appwrite.proyecto,appwrite.clave
       - key: HSLV_FACTURADORES_PRUEBA
         value: /etc/secrets/facturadores.json
+      # Escenarios de prueba con credenciales públicas y ficticias (/api/dev). Quitar antes de cargar datos reales.
+      - key: HSLV_CATALOGO_PRUEBAS
+        value: config/usuarios-prueba.json

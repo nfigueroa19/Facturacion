@@ -13,12 +13,21 @@ data class ConfiguracionBaseDatos(val url: String, val usuario: String, val alia
 
 enum class DestinoPersistencia { POSTGRES, APPWRITE }
 
-data class ConfiguracionPersistencia(val destino: DestinoPersistencia, val baseDatosAppwrite: String, val bucketAppwrite: String)
+/** `intentosAppwrite` y `esperaInicialAppwrite` controlan los reintentos ante fallas transitorias de Appwrite. */
+data class ConfiguracionPersistencia(
+    val destino: DestinoPersistencia,
+    val baseDatosAppwrite: String,
+    val bucketAppwrite: String,
+    val intentosAppwrite: Int,
+    val esperaInicialAppwrite: Duration,
+)
 
 data class ConfiguracionSolicitudes(
     val formulario: Path,
     val citasPrueba: Path,
     val facturadoresPrueba: Path,
+    /** Catálogo de escenarios de prueba (`config/usuarios-prueba.json`). Sin él no hay escenarios ni rutas `/api/dev`. */
+    val catalogoPruebas: Path?,
     val tamanoMaximoSoporteBytes: Int,
     val duracionSesion: Duration,
     val zonaHoraria: ZoneId,
@@ -45,6 +54,7 @@ fun ApplicationConfig.configuracionAplicacion(): ConfiguracionAplicacion {
             formulario = Path.of(valor("solicitudes.formulario")),
             citasPrueba = Path.of(valor("solicitudes.citasPrueba")),
             facturadoresPrueba = Path.of(valor("solicitudes.facturadoresPrueba")),
+            catalogoPruebas = valor("solicitudes.catalogoPruebas").ifBlank { null }?.let(Path::of),
             tamanoMaximoSoporteBytes = valor("solicitudes.tamanoMaximoSoporteBytes").toInt(),
             duracionSesion = Duration.ofMinutes(valor("solicitudes.minutosSesion").toLong()),
             zonaHoraria = ZoneId.of(valor("solicitudes.zonaHoraria")),
@@ -65,6 +75,8 @@ fun ApplicationConfig.configuracionAplicacion(): ConfiguracionAplicacion {
             destino = DestinoPersistencia.valueOf(valor("persistencia.destino").uppercase()),
             baseDatosAppwrite = valor("persistencia.baseDatosAppwrite"),
             bucketAppwrite = valor("persistencia.bucketAppwrite"),
+            intentosAppwrite = valor("persistencia.intentosAppwrite").toInt(),
+            esperaInicialAppwrite = Duration.ofMillis(valor("persistencia.esperaInicialAppwriteMs").toLong()),
         ),
     )
 }

@@ -4,7 +4,8 @@ import { App, type Clientes } from "../App";
 import type { ClienteFacturador } from "../api/clienteFacturador";
 import type { ClientePaciente } from "../api/clientePaciente";
 import type { ClientePersonal } from "../api/clientePersonal";
-import type { DetalleSolicitud, PrefacturaPaciente, ResumenSolicitud, Turno } from "../api/tipos";
+import type { ClientePruebas } from "../api/clientePruebas";
+import type { CatalogoPruebas, DetalleSolicitud, PrefacturaPaciente, ResumenSolicitud, Turno } from "../api/tipos";
 import type { ClienteContenido, Textos } from "../contenido/clienteContenido";
 import { ProveedorContenido } from "../contenido/ContenidoContexto";
 
@@ -34,6 +35,10 @@ export const TEXTOS: Textos = {
   "checklist.DATOS": "Datos revisados",
   "checklist.AUTORIZACION": "Autorización revisada",
   "checklist.ORDEN_MEDICA": "Orden revisada",
+  "pruebas.abrir": "Ver datos de prueba",
+  "pruebas.restablecer.abrir": "Restablecer datos de prueba",
+  "pruebas.restablecer.confirmar": "Restablecer",
+  "pruebas.restablecer.listo": "Listo: {escenarios} casos restablecidos",
 };
 
 export const CITA = { fecha: "2026-10-23", medico: "Médico de prueba", especialidad: "Especialidad", regimen: "CONTRIBUTIVO", copagoPesos: 5000 } as const;
@@ -115,12 +120,35 @@ export function clientePersonal(cambios: Partial<ClientePersonal> = {}): Cliente
   };
 }
 
+export const CATALOGO: CatalogoPruebas = {
+  personal: [{ usuario: "facturador", clave: "clave-de-prueba", nombre: "Facturador de prueba", modulo: "/facturador", uso: "Revisa solicitudes." }],
+  pacientes: [
+    { escenario: "Flujo feliz de prueba", identificacion: "1111111111", codigoAcceso: "FELIZ", diasDesdeHoy: 0, etapa: "SIN_RADICAR", pasos: ["Radique."] },
+  ],
+  callcenter: [],
+};
+
+/** Por defecto el backend no publica el catálogo, como en producción sin escenarios. */
+export function clientePruebas(cambios: Partial<ClientePruebas> = {}): ClientePruebas {
+  return {
+    catalogo: vi.fn(() => Promise.resolve(null)),
+    restablecer: vi.fn(() => Promise.resolve(10)),
+    ...cambios,
+  };
+}
+
 export function contenido(obtenerTextos: ClienteContenido["obtenerTextos"] = () => Promise.resolve(TEXTOS)): ClienteContenido {
   return { obtenerTextos, urlImagen: (clave) => `/imagenes/${clave}` };
 }
 
 export function montar(opciones: { contenido?: ClienteContenido; clientes?: Partial<Clientes>; ruta?: string } = {}) {
-  const clientes: Clientes = { paciente: clientePaciente(), facturador: clienteFacturador(), personal: clientePersonal(), ...opciones.clientes };
+  const clientes: Clientes = {
+    paciente: clientePaciente(),
+    facturador: clienteFacturador(),
+    personal: clientePersonal(),
+    pruebas: clientePruebas(),
+    ...opciones.clientes,
+  };
   return render(
     <ProveedorContenido cliente={opciones.contenido ?? contenido()}>
       <App clientes={clientes} ruta={opciones.ruta ?? "/"} />

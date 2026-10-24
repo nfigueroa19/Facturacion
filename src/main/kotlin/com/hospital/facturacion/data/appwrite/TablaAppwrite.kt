@@ -14,31 +14,39 @@ import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse.BodyHandlers
 import kotlin.text.Charsets.UTF_8
 
-/** Filas de una tabla de Appwrite TablesDB con la forma `F`. Las columnas de sistema (`$id`, `$createdAt`...) se ignoran. */
-class TablaAppwrite<F>(private val cliente: ClienteAppwrite, baseDatos: String, tabla: String, private val forma: KSerializer<F>) {
+/**
+ * Filas de una tabla de Appwrite TablesDB con la forma `F`. Las columnas de sistema (`$id`, `$createdAt`...) se ignoran.
+ * Leer, guardar, buscar y eliminar son idempotentes y se reintentan ante fallas transitorias; incrementar no.
+ */
+class TablaAppwrite<F>(
+    private val cliente: ClienteAppwrite,
+    baseDatos: String,
+    tabla: String,
+    private val forma: KSerializer<F>,
+    private val reintentos: ReintentosAppwrite,
+) {
     private val filas = "/tablesdb/$baseDatos/tables/$tabla/rows"
 
-    fun leer(id: String): F? {
+    fun leer(id: String): F? = reintentos.ejecutar {
         val respuesta = cliente.enviar("$filas/$id", BodyHandlers.ofString(), 200, 404) { GET() }
-        return if (respuesta.statusCode() == 404) null else formato.decodeFromString(forma, respuesta.body())
+        if (respuesta.statusCode() == 404) null else formato.decodeFromString(forma, respuesta.body())
     }
 
     /** Crea la fila o la reemplaza completa. */
-    fun guardar(id: String, fila: F) {
+    fun guardar(id: String, fila: F) = reintentos.ejecutar {
         val datos = buildJsonObject { put("data", formato.encodeToJsonElement(forma, fila)) }
         val guardada = cliente.enviar("$filas/$id", BodyHandlers.ofString(), 200, 201) { conJson("PUT", datos) }.body()
-        // Appwrite Cloud respondió una vez 200 con `{}` sin crear la fila: solo cuenta si devuelve la fila con su ID.
-        check(formato.parseToJsonElement(guardada).jsonObject["\$id"]?.jsonPrimitive?.content == id) { "Appwrite no confirmó la fila" }
+        if (idConfirmado(guardada) != id) throw FalloTransitorioAppwrite("Appwrite no confirmó la fila")
     }
 
     /** Falla si hay más de [MAXIMO_FILAS] coincidencias en lugar de entregar una lista incompleta. */
-    fun buscar(vararg consultas: ConsultaAppwrite): List<F> {
-        val parametros = (consultas.toList() + ConsultaAppwrite.limite(MAXIMO_FILAS))
-            .joinToString("&") { "queries%5B%5D=" + URLEncoder.encode(it.json, UTF_8) }
-        val lista = formato.decodeFromString(ListaFilas.serializer(), cliente.enviar("$filas?$parametros", BodyHandlers.ofString(), 200) { GET() }.body())
+    fun buscar(vararg consultas: ConsultaAppwrite): List<F> = reintentos.ejecutar {
+        val lista = formato.decodeFromString(ListaFilas.serializer(), cliente.enviar("$filas?${parametros(consultas)}", BodyHandlers.ofString(), 200) { GET() }.body())
         check(lista.total <= lista.rows.size) { "La consulta supera $MAXIMO_FILAS filas" }
-        return lista.rows.map { formato.decodeFromJsonElement(forma, it) }
+        lista.rows.map { formato.decodeFromJsonElement(forma, it) }
     }
+
+    fun eliminar(id: String) { reintentos.ejecutar { cliente.enviar("$filas/$id", BodyHandlers.discarding(), 204, 404) { DELETE() } } }
 
     /** Suma 1 a una columna numérica en el servidor, sin carreras entre peticiones, y devuelve la fila resultante. */
     fun incrementar(id: String, columna: String): F {
@@ -56,6 +64,17 @@ private class ListaFilas(val total: Long, val rows: List<JsonObject>)
 private val formato = Json {
     ignoreUnknownKeys = true
     encodeDefaults = true
+}
+
+private fun parametros(consultas: Array<out ConsultaAppwrite>) = (consultas.toList() + ConsultaAppwrite.limite(MAXIMO_FILAS))
+    .joinToString("&") { "queries%5B%5D=" + URLEncoder.encode(it.json, UTF_8) }
+
+// Appwrite Cloud respondió 200 con `{}` (o sin cuerpo) sin crear la fila: solo cuenta si devuelve la fila con su ID.
+private fun idConfirmado(cuerpo: String): String? = try {
+    formato.parseToJsonElement(cuerpo).jsonObject["\$id"]?.jsonPrimitive?.content
+} catch (e: IllegalArgumentException) {
+    // Cuerpo vacío, JSON inválido (SerializationException) o algo que no es un objeto.
+    null
 }
 
 private fun HttpRequest.Builder.conJson(metodo: String, cuerpo: JsonObject) =

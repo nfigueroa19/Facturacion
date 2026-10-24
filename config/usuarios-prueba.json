@@ -1,0 +1,193 @@
+{
+  "personal": [
+    {
+      "usuario": "facturador",
+      "clave": "prueba123",
+      "nombre": "Facturador de prueba",
+      "modulo": "/facturador",
+      "uso": "Revisa solicitudes, registra novedades, aprueba, registra ingreso, factura y anula."
+    },
+    {
+      "usuario": "callcenter",
+      "clave": "prueba123",
+      "nombre": "Agente de call center de prueba",
+      "modulo": "/callcenter",
+      "uso": "Asigna citas a las identificaciones del call center y envía el SMS con el ID de acceso."
+    },
+    {
+      "usuario": "digiturno",
+      "clave": "prueba123",
+      "nombre": "Digiturno de prueba",
+      "modulo": "/digiturno",
+      "uso": "Registra la llegada del paciente en sala con su identificación."
+    }
+  ],
+  "pacientes": [
+    {
+      "escenario": "Flujo feliz",
+      "identificacion": "1111111111",
+      "codigoAcceso": "FELIZ",
+      "diasDesdeHoy": 0,
+      "regimen": "SUBSIDIADO",
+      "celular": "3000000001",
+      "etapa": "SIN_RADICAR",
+      "pasos": [
+        "Ingrese en / con la identificación y el ID de acceso.",
+        "Diligencie los datos, cargue los dos PDF y radique. No hay copago.",
+        "En /facturador, apruebe la solicitud, registre el ingreso, confirme la llegada y registre la factura."
+      ]
+    },
+    {
+      "escenario": "Copago rechazado y luego aprobado",
+      "identificacion": "2222222222",
+      "codigoAcceso": "COPAGO",
+      "diasDesdeHoy": 0,
+      "regimen": "CONTRIBUTIVO",
+      "copagoPesos": 5000,
+      "celular": "3000000002",
+      "etapa": "SIN_RADICAR",
+      "pasos": [
+        "Ingrese en / y llegue al paso del copago.",
+        "Pague con una tarjeta de rechazo: la pantalla muestra el motivo y permite reintentar.",
+        "Pague con 4242 4242 4242 4242: queda aprobado y puede radicar."
+      ]
+    },
+    {
+      "escenario": "Novedad en el PDF de la orden médica",
+      "identificacion": "3333333333",
+      "codigoAcceso": "NOVEDAD",
+      "diasDesdeHoy": 0,
+      "regimen": "CONTRIBUTIVO",
+      "copagoPesos": 5000,
+      "celular": "3000000003",
+      "etapa": "PENDIENTE",
+      "pasos": [
+        "Ingrese en /: la solicitud está PENDIENTE y muestra la novedad del facturador.",
+        "Cargue de nuevo la orden médica y envíe la corrección: vuelve a EN_REVISION.",
+        "En /digiturno, esta identificación va a ventanilla con el texto de la novedad."
+      ]
+    },
+    {
+      "escenario": "Solicitud en revisión",
+      "identificacion": "4444444444",
+      "codigoAcceso": "REVISION",
+      "diasDesdeHoy": 0,
+      "regimen": "SUBSIDIADO",
+      "celular": "3000000004",
+      "etapa": "EN_REVISION",
+      "pasos": [
+        "En /facturador, abra la solicitud, revise los PDF y apruébela o registre una novedad.",
+        "Si registra una novedad, el panel de comunicaciones muestra el SMS al paciente."
+      ]
+    },
+    {
+      "escenario": "Aprobada: llegada por digiturno",
+      "identificacion": "5555555555",
+      "codigoAcceso": "LLEGADA",
+      "diasDesdeHoy": 0,
+      "regimen": "SUBSIDIADO",
+      "celular": "3000000005",
+      "etapa": "APROBADO",
+      "pasos": [
+        "En /digiturno, digite la identificación: confirma la llegada y entrega turno de preconsulta.",
+        "En /facturador, la solicitud queda LISTO_PARA_FACTURAR."
+      ]
+    },
+    {
+      "escenario": "Aprobada con ingreso: el paciente no llega",
+      "identificacion": "6666666666",
+      "codigoAcceso": "INASISTE",
+      "diasDesdeHoy": 0,
+      "regimen": "CONTRIBUTIVO",
+      "copagoPesos": 5000,
+      "celular": "3000000006",
+      "etapa": "APROBADO_CON_INGRESO",
+      "pasos": [
+        "En /facturador, anule el ingreso con un motivo: la solicitud pasa a INGRESO_ANULADO."
+      ]
+    },
+    {
+      "escenario": "Lista para facturar",
+      "identificacion": "7777777777",
+      "codigoAcceso": "FACTURAR",
+      "diasDesdeHoy": 0,
+      "regimen": "CONTRIBUTIVO",
+      "copagoPesos": 5000,
+      "celular": "3000000007",
+      "etapa": "LISTO_PARA_FACTURAR",
+      "pasos": [
+        "En /facturador, registre un error de Dinámica: la solicitud sigue LISTO_PARA_FACTURAR.",
+        "Registre el número de factura: pasa a FACTURADO."
+      ]
+    },
+    {
+      "escenario": "Facturada",
+      "identificacion": "8888888888",
+      "codigoAcceso": "FACTURADA",
+      "diasDesdeHoy": 0,
+      "regimen": "SUBSIDIADO",
+      "celular": "3000000008",
+      "etapa": "FACTURADO",
+      "pasos": [
+        "En / y en /facturador, la solicitud se ve FACTURADO con su ingreso y su factura, sin acciones pendientes."
+      ]
+    },
+    {
+      "escenario": "Ingreso anulado",
+      "identificacion": "9999999999",
+      "codigoAcceso": "ANULADA",
+      "diasDesdeHoy": 0,
+      "regimen": "SUBSIDIADO",
+      "celular": "3000000009",
+      "etapa": "INGRESO_ANULADO",
+      "pasos": [
+        "En /facturador, la solicitud se ve INGRESO_ANULADO con el motivo.",
+        "En /digiturno, esta identificación va a ventanilla."
+      ]
+    },
+    {
+      "escenario": "Cita de mañana",
+      "identificacion": "1212121212",
+      "codigoAcceso": "MANANA",
+      "diasDesdeHoy": 1,
+      "regimen": "SUBSIDIADO",
+      "celular": "3000000012",
+      "etapa": "APROBADO",
+      "pasos": [
+        "En /facturador, intente registrar el ingreso: se rechaza porque solo se registra el día de la cita.",
+        "En /digiturno, esta identificación no tiene cita hoy y va a ventanilla."
+      ]
+    }
+  ],
+  "callcenter": [
+    {
+      "identificacion": "1010101010",
+      "celular": "3000000101",
+      "pasos": [
+        "En /callcenter, asigne una cita a esta identificación con el celular indicado: el SMS queda en el panel de comunicaciones.",
+        "Para recibir el SMS real, escriba un celular autorizado en el almacén de secretos.",
+        "Con el ID de acceso del SMS, ingrese en / como paciente."
+      ]
+    },
+    {
+      "identificacion": "2020202020",
+      "celular": "3000000202",
+      "pasos": ["Igual al anterior. Pruebe una cita con copago activado."]
+    },
+    {
+      "identificacion": "3030303030",
+      "celular": "3000000303",
+      "pasos": ["Igual al anterior. Pruebe una cita para otro día y verifique que no se puede facturar hoy."]
+    }
+  ],
+  "datosFormulario": {
+    "nombres-apellidos": "Paciente de prueba",
+    "fecha-nacimiento": "1990-01-01",
+    "nombre-padre": "Padre de prueba",
+    "nombre-madre": "Madre de prueba",
+    "eps": "EPS de prueba",
+    "celular": "3000000000",
+    "direccion": "Calle de prueba 1",
+    "municipio": "Municipio de prueba"
+  }
+}

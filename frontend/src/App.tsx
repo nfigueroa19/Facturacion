@@ -2,17 +2,21 @@ import { useCallback, useEffect, useState } from "react";
 import type { ClienteFacturador } from "./api/clienteFacturador";
 import type { ClientePaciente } from "./api/clientePaciente";
 import type { ClientePersonal } from "./api/clientePersonal";
+import type { ClientePruebas } from "./api/clientePruebas";
+import type { CatalogoPruebas } from "./api/tipos";
 import { lectorDe, useContenido } from "./contenido/ContenidoContexto";
 import { EsqueletoAcceso } from "./componentes/EsqueletoAcceso";
 import { ErrorContenido } from "./componentes/ErrorContenido";
 import { Marco, type Superficie } from "./componentes/Marco";
 import { AppPaciente } from "./pantallas/paciente/AppPaciente";
 import { AppPersonal } from "./pantallas/personal/AppPersonal";
+import { useCarga } from "./useCarga";
 
 export interface Clientes {
   readonly paciente: ClientePaciente;
   readonly facturador: ClienteFacturador;
   readonly personal: ClientePersonal;
+  readonly pruebas: ClientePruebas;
 }
 
 const RUTAS_PERSONAL = { "/facturador": "facturador", "/callcenter": "callcenter", "/digiturno": "digiturno" } as const;
@@ -27,8 +31,15 @@ interface PropsPantalla {
   readonly navegar: (ruta: string) => void;
 }
 
+/** El catálogo de pruebas es opcional: si el backend no lo publica o no responde, las pantallas siguen sin él. */
+function useCatalogoPruebas(cliente: ClientePruebas): CatalogoPruebas | null {
+  const { carga } = useCarga((senal) => cliente.catalogo(senal), []);
+  return carga.tipo === "lista" ? carga.valor : null;
+}
+
 function PantallaSegunContenido({ clientes, superficie, navegar }: PropsPantalla) {
   const { estado, reintentar } = useContenido();
+  const catalogo = useCatalogoPruebas(clientes.pruebas);
   switch (estado.tipo) {
     case "cargando":
       return <EsqueletoAcceso />;
@@ -37,9 +48,9 @@ function PantallaSegunContenido({ clientes, superficie, navegar }: PropsPantalla
     case "listo": {
       const texto = lectorDe(estado.textos);
       return superficie === "paciente" ? (
-        <AppPaciente cliente={clientes.paciente} texto={texto} />
+        <AppPaciente cliente={clientes.paciente} texto={texto} catalogo={catalogo} />
       ) : (
-        <AppPersonal clientes={clientes} superficie={superficie} texto={texto} navegar={navegar} />
+        <AppPersonal clientes={clientes} superficie={superficie} texto={texto} navegar={navegar} catalogo={catalogo} />
       );
     }
   }

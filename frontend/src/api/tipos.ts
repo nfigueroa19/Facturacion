@@ -155,3 +155,44 @@ export interface Turno {
 export function admiteCambiosDelPaciente(solicitud: SolicitudPaciente | null): boolean {
   return solicitud === null || solicitud.estado === "PENDIENTE";
 }
+
+/** Hasta dónde avanzó la solicitud de un escenario de prueba al restablecerlo. */
+export type EtapaEscenario =
+  | "SIN_RADICAR"
+  | "EN_REVISION"
+  | "PENDIENTE"
+  | "APROBADO"
+  | "APROBADO_CON_INGRESO"
+  | "LISTO_PARA_FACTURAR"
+  | "FACTURADO"
+  | "INGRESO_ANULADO";
+
+export interface UsuarioPrueba {
+  readonly usuario: string;
+  readonly clave: string;
+  readonly nombre: string;
+  readonly modulo: string;
+  readonly uso: string;
+}
+
+export interface EscenarioPaciente {
+  readonly escenario: string;
+  readonly identificacion: string;
+  readonly codigoAcceso: string;
+  readonly diasDesdeHoy: number;
+  readonly etapa: EtapaEscenario;
+  readonly pasos: readonly string[];
+}
+
+export interface PacienteCallCenter {
+  readonly identificacion: string;
+  readonly celular: string;
+  readonly pasos: readonly string[];
+}
+
+/** Catálogo ficticio de `config/usuarios-prueba.json`. Solo existe mientras el backend tenga activos los escenarios. */
+export interface CatalogoPruebas {
+  readonly personal: readonly UsuarioPrueba[];
+  readonly pacientes: readonly EscenarioPaciente[];
+  readonly callcenter: readonly PacienteCallCenter[];
+}

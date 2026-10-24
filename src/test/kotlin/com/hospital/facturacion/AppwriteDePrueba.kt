@@ -4,13 +4,17 @@ import com.hospital.facturacion.arranque.ALIAS_APPWRITE_CLAVE
 import com.hospital.facturacion.arranque.ALIAS_APPWRITE_ENDPOINT
 import com.hospital.facturacion.arranque.ALIAS_APPWRITE_PROYECTO
 import com.hospital.facturacion.data.appwrite.ClienteAppwrite
+import com.hospital.facturacion.data.appwrite.ReintentosAppwrite
 import com.hospital.facturacion.data.appwrite.TablaAppwrite
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
 import kotlinx.serialization.KSerializer
+import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 import java.net.URI
 import java.net.http.HttpClient
+import java.time.Duration
+import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 
 const val BASE_APPWRITE_PRUEBA = "facturacion_db"
@@ -23,6 +27,9 @@ const val BUCKET_APPWRITE_PRUEBA = "soportes_pdf"
 class AppwriteDePrueba(val proyecto: String = "proyecto-prueba", val claveApi: String = "clave-api-prueba") : AutoCloseable {
     val archivos = ConcurrentHashMap<String, ArchivoAppwrite>()
     val tablas = TablasDePrueba()
+
+    /** Esperas que pidieron los reintentos; no duermen para que las pruebas no se demoren. */
+    val esperas: MutableList<Duration> = Collections.synchronizedList(mutableListOf())
     private val http = HttpClient.newHttpClient()
     private val servidor = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0).apply {
         createContext("/v1/storage/buckets/$BUCKET_APPWRITE_PRUEBA/files") { atender(it) { ruta -> archivos.responder(it.requestMethod, ruta, it) } }
@@ -34,7 +41,9 @@ class AppwriteDePrueba(val proyecto: String = "proyecto-prueba", val claveApi: S
 
     fun cliente(clave: String = claveApi) = ClienteAppwrite(endpoint, proyecto, clave, http)
 
-    fun <F> tabla(nombre: String, forma: KSerializer<F>) = TablaAppwrite(cliente(), BASE_APPWRITE_PRUEBA, nombre, forma)
+    fun <F> tabla(nombre: String, forma: KSerializer<F>) = TablaAppwrite(cliente(), BASE_APPWRITE_PRUEBA, nombre, forma, reintentos())
+
+    fun reintentos(intentos: Int = 3) = ReintentosAppwrite(intentos, Duration.ofMillis(100), esperas::add, LoggerFactory.getLogger("pruebas"))
 
     /** Alias del almacén PKCS12 que apuntan a esta imitación. */
     fun secretos() = mapOf(ALIAS_APPWRITE_ENDPOINT to endpoint.toString(), ALIAS_APPWRITE_PROYECTO to proyecto, ALIAS_APPWRITE_CLAVE to claveApi)

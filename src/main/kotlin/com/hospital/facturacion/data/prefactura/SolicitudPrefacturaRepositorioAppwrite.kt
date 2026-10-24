@@ -4,6 +4,7 @@ import com.hospital.facturacion.data.appwrite.ConsultaAppwrite.Companion.ascende
 import com.hospital.facturacion.data.appwrite.ConsultaAppwrite.Companion.igual
 import com.hospital.facturacion.data.appwrite.TablaAppwrite
 import com.hospital.facturacion.data.appwrite.idAppwrite
+import com.hospital.facturacion.data.cita.BorradoPorCita
 import com.hospital.facturacion.domain.cita.CitaId
 import com.hospital.facturacion.domain.prefactura.ConsecutivoRadicado
 import com.hospital.facturacion.domain.prefactura.SolicitudPrefactura
@@ -18,9 +19,9 @@ class SolicitudPrefacturaRepositorioAppwrite(
     private val solicitudes: TablaAppwrite<FilaSolicitud>,
     private val novedades: TablaAppwrite<FilaNovedad>,
     private val json: Json,
-) : SolicitudPrefacturaRepositorio {
+) : SolicitudPrefacturaRepositorio, BorradoPorCita {
     override fun guardar(solicitud: SolicitudPrefactura) {
-        solicitud.filasNovedades().forEach { novedades.guardar(idAppwrite("${it.solicitud}/${it.orden}"), it) }
+        solicitud.filasNovedades().forEach { novedades.guardar(it.idFila(), it) }
         solicitudes.guardar(idAppwrite(solicitud.consecutivo.valor), solicitud.fila(json))
     }
 
@@ -33,5 +34,12 @@ class SolicitudPrefacturaRepositorioAppwrite(
         return solicitudes.buscar(ascendente("fecha_envio")).map { it.solicitud(porSolicitud[it.consecutivo].orEmpty(), json) }
     }
 
+    override fun eliminar(cita: CitaId) = solicitudes.buscar(igual("cita", cita.valor)).forEach { fila ->
+        novedades.buscar(igual("solicitud", fila.consecutivo)).forEach { novedades.eliminar(it.idFila()) }
+        solicitudes.eliminar(idAppwrite(fila.consecutivo))
+    }
+
     private fun FilaSolicitud.conNovedades() = solicitud(novedades.buscar(igual("solicitud", consecutivo)), json)
 }
+
+private fun FilaNovedad.idFila() = idAppwrite("$solicitud/$orden")
