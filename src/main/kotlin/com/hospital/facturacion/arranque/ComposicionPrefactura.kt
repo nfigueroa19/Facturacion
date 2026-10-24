@@ -2,17 +2,27 @@ package com.hospital.facturacion.arranque
 
 import com.hospital.facturacion.api.facturador.CasosFacturador
 import com.hospital.facturacion.api.paciente.CasosPaciente
+import com.hospital.facturacion.api.personal.CasosPersonal
+import com.hospital.facturacion.data.cita.GeneradorAccesoAleatorio
 import com.hospital.facturacion.data.copago.PasarelaPagosSimulada
 import com.hospital.facturacion.data.formulario.leerFormulario
 import com.hospital.facturacion.data.sesion.SesionesMemoria
 import com.hospital.facturacion.domain.cita.CitaId
+import com.hospital.facturacion.domain.comunicacion.NotificadorPaciente
 import com.hospital.facturacion.domain.facturador.Facturador
+import com.hospital.facturacion.service.callcenter.ProgramarCita
+import com.hospital.facturacion.service.comunicacion.ConsultarComunicaciones
+import com.hospital.facturacion.service.digiturno.AtenderLlegada
+import com.hospital.facturacion.service.facturador.AnularIngreso
 import com.hospital.facturacion.service.facturador.AprobarSolicitud
 import com.hospital.facturacion.service.facturador.ConfirmarLlegada
 import com.hospital.facturacion.service.facturador.ConsultarSolicitud
 import com.hospital.facturacion.service.facturador.IniciarSesionFacturador
 import com.hospital.facturacion.service.facturador.ListarSolicitudes
 import com.hospital.facturacion.service.facturador.ObtenerSoporte
+import com.hospital.facturacion.service.facturador.RegistrarFactura
+import com.hospital.facturacion.service.facturador.RegistrarIngreso
+import com.hospital.facturacion.service.facturador.RegistrarIntentoFacturacion
 import com.hospital.facturacion.service.facturador.RegistrarNovedad
 import com.hospital.facturacion.service.paciente.CargarSoporte
 import com.hospital.facturacion.service.paciente.ConsultarPrefacturaPaciente
@@ -26,12 +36,13 @@ import java.time.Clock
 class ComposicionPrefactura(
     val configuracion: ConfiguracionSolicitudes,
     val persistencia: Persistencia,
+    val notificador: NotificadorPaciente,
     val reloj: Clock,
     val aleatorio: SecureRandom,
 ) {
     val formulario = leerFormulario(configuracion.formulario, Json)
 
-    // Las sesiones siguen en memoria: tras un reinicio el paciente y el facturador vuelven a ingresar.
+    // Las sesiones siguen en memoria: tras un reinicio el paciente y el personal vuelven a ingresar.
     val sesionesPaciente = SesionesMemoria<CitaId>(reloj, configuracion.duracionSesion, aleatorio)
     val sesionesFacturador = SesionesMemoria<Facturador>(reloj, configuracion.duracionSesion, aleatorio)
 }
@@ -57,7 +68,19 @@ fun ComposicionPrefactura.casosFacturador() = with(persistencia) {
         consultar = ConsultarSolicitud(solicitudes, agenda, soportes, pagos),
         obtenerSoporte = ObtenerSoporte(solicitudes, soportes),
         aprobar = AprobarSolicitud(solicitudes, agenda, reloj),
-        registrarNovedad = RegistrarNovedad(solicitudes, reloj),
+        registrarNovedad = RegistrarNovedad(solicitudes, agenda, notificador, reloj),
         confirmarLlegada = ConfirmarLlegada(solicitudes),
+        registrarIngreso = RegistrarIngreso(solicitudes, agenda, reloj),
+        anularIngreso = AnularIngreso(solicitudes, reloj),
+        registrarIntento = RegistrarIntentoFacturacion(solicitudes, agenda, reloj),
+        registrarFactura = RegistrarFactura(solicitudes, agenda, reloj),
+    )
+}
+
+fun ComposicionPrefactura.casosPersonal() = with(persistencia) {
+    CasosPersonal(
+        programarCita = ProgramarCita(registroCitas, GeneradorAccesoAleatorio(aleatorio), notificador, reloj),
+        atenderLlegada = AtenderLlegada(agenda, solicitudes, turnos, reloj),
+        comunicaciones = ConsultarComunicaciones(comunicaciones),
     )
 }

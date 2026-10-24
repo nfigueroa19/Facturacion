@@ -61,6 +61,7 @@ Cada clase tiene una sola razón para cambiar. Un caso de uso, un adaptador, un 
 - **Reglas de negocio.** El agente no inventa reglas hospitalarias, normativas (DIAN, Ministerio de Salud, EPS) ni datos de contratos. Si falta un dato, pregunta y deja la pregunta registrada en la nota de requerimientos correspondiente.
 - **Datos sensibles.** Datos de pacientes, soportes y autorizaciones no se envían a APIs externas ni se escriben en logs. No se usan datos reales en pruebas ni ejemplos.
   - **Excepción PoC (autorizada por el usuario el 2026-10-22).** Durante la prueba piloto la persistencia del backend (tablas y soportes PDF) vive en Appwrite Cloud. Solo se cargan datos ficticios de pacientes, citas y soportes, como los de los diagramas y el audio de requerimientos. Cargar datos reales exige retirar esta excepción y una nueva decisión de infraestructura. La prohibición de escribir datos de pacientes en logs sigue vigente.
+  - **SMS del PoC (autorizado por el usuario el 2026-10-23).** Los SMS de prueba pueden salir por Twilio solo con datos ficticios y solo a celulares de la lista `twilio.autorizados` del almacén PKCS12; el resto se simula. Con datos reales, el proveedor de SMS necesita contrato de encargado del tratamiento.
 
 ## 4. Calidad: revisión estricta y anti-slop
 

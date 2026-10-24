@@ -1,11 +1,15 @@
-/** Respuesta no exitosa del backend. `codigo` es el campo `error` de `ErrorDto`, si vino. */
+/** Respuesta no exitosa del backend. `codigo` y `detalle` son los campos `error` y `detalle` de `ErrorDto`, si vinieron. */
 export class ErrorApi extends Error {
+  readonly detalle: readonly string[];
+
   constructor(
     readonly estado: number,
     readonly codigo: string | null,
     readonly cuerpo: unknown,
   ) {
     super(`HTTP ${estado}${codigo === null ? "" : ` ${codigo}`}`);
+    const detalle = typeof cuerpo === "object" && cuerpo !== null && "detalle" in cuerpo ? cuerpo.detalle : null;
+    this.detalle = Array.isArray(detalle) ? detalle.filter((d): d is string => typeof d === "string") : [];
   }
 }
 

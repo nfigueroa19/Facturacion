@@ -5,8 +5,12 @@ import com.hospital.facturacion.data.appwrite.TablaAppwrite
 import com.hospital.facturacion.data.cita.AgendaCitasAppwrite
 import com.hospital.facturacion.data.cita.FilaCita
 import com.hospital.facturacion.data.cita.sembrarCitas
+import com.hospital.facturacion.data.comunicacion.BandejaComunicacionesAppwrite
+import com.hospital.facturacion.data.comunicacion.FilaComunicacion
 import com.hospital.facturacion.data.copago.FilaPago
 import com.hospital.facturacion.data.copago.PagosCopagoAppwrite
+import com.hospital.facturacion.data.digiturno.GeneradorTurnosAppwrite
+import com.hospital.facturacion.data.digiturno.prepararTurnos
 import com.hospital.facturacion.data.facturador.ClavePbkdf2
 import com.hospital.facturacion.data.facturador.DirectorioFacturadoresAppwrite
 import com.hospital.facturacion.data.facturador.FilaUsuario
@@ -41,14 +45,18 @@ fun persistenciaAppwrite(
     fun <F> tabla(nombre: String, forma: KSerializer<F>) = TablaAppwrite(cliente, configuracion.baseDatosAppwrite, nombre, forma)
     val citas = tabla("citas", FilaCita.serializer()).also { sembrarCitas(it, datos.citas) }
     val usuarios = tabla("usuarios", FilaUsuario.serializer()).also { sembrarFacturadores(it, datos.facturadores) }
-    val consecutivos = tabla("consecutivos", FilaConsecutivo.serializer()).also(::prepararConsecutivo)
+    val consecutivos = tabla("consecutivos", FilaConsecutivo.serializer()).also(::prepararConsecutivo).also(::prepararTurnos)
+    val agenda = AgendaCitasAppwrite(citas)
     return Persistencia(
-        agenda = AgendaCitasAppwrite(citas),
+        agenda = agenda,
+        registroCitas = agenda,
         solicitudes = SolicitudPrefacturaRepositorioAppwrite(tabla("solicitudes", FilaSolicitud.serializer()), tabla("novedades", FilaNovedad.serializer()), Json),
         pagos = PagosCopagoAppwrite(tabla("pagos_copago", FilaPago.serializer())),
         consecutivo = GeneradorConsecutivoAppwrite(consecutivos),
         facturadores = DirectorioFacturadoresAppwrite(usuarios, ClavePbkdf2()),
         soportes = AlmacenSoportesAppwrite(cliente, configuracion.bucketAppwrite, tamanoMaximoSoporteBytes),
+        comunicaciones = BandejaComunicacionesAppwrite(tabla("comunicaciones", FilaComunicacion.serializer())),
+        turnos = GeneradorTurnosAppwrite(consecutivos),
         cerrar = http::close,
     )
 }

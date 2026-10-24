@@ -8,6 +8,8 @@ import com.hospital.facturacion.api.plataforma.responderError
 import com.hospital.facturacion.api.prefactura.aDto
 import com.hospital.facturacion.domain.cita.AgendaCitas
 import com.hospital.facturacion.domain.cita.Cita
+import com.hospital.facturacion.domain.copago.MotivoRechazoPago
+import com.hospital.facturacion.domain.copago.TokenPago
 import com.hospital.facturacion.domain.formulario.FormularioPrefactura
 import com.hospital.facturacion.domain.soporte.MotivoRechazoPdf
 import com.hospital.facturacion.domain.soporte.TipoSoporte
@@ -54,7 +56,7 @@ fun Route.rutasPaciente(casos: CasosPaciente) {
         authenticate(AUTENTICACION_PACIENTE) {
             get("/prefactura") { conCita(casos) { call.respond(casos.consultar.ejecutar(it).aDto(casos.formulario, casos.tamanoMaximoSoporteBytes)) } }
             put("/soportes/{tipo}") { conCita(casos) { cargarSoporte(call, casos, it) } }
-            post("/copago") { conCita(casos) { call.responderPago(casos.pagarCopago.ejecutar(it)) } }
+            post("/copago") { conCita(casos) { pagarCopago(call, casos, it) } }
             post("/solicitud") {
                 conCita(casos) { call.responderRadicacion(casos.radicar.ejecutar(it.id, call.receive<DatosPacienteDto>().datos)) }
             }
@@ -80,12 +82,18 @@ private suspend fun cargarSoporte(call: ApplicationCall, casos: CasosPaciente, c
     }
 }
 
+private suspend fun pagarCopago(call: ApplicationCall, casos: CasosPaciente, cita: Cita) {
+    val medio = TokenPago.de(call.receive<MedioPagoDto>().token)
+        ?: return call.responderError(HttpStatusCode.UnprocessableEntity, "pago-rechazado", listOf(MotivoRechazoPago.MEDIO_INVALIDO.name))
+    call.responderPago(casos.pagarCopago.ejecutar(cita, medio))
+}
+
 private suspend fun ApplicationCall.responderPago(resultado: ResultadoPago) = when (resultado) {
     is ResultadoPago.Pagado -> respond(resultado.pago.aDto())
     ResultadoPago.SinCopago -> responderError(HttpStatusCode.Conflict, "sin-copago")
     ResultadoPago.YaPagado -> responderError(HttpStatusCode.Conflict, "ya-pagado")
     ResultadoPago.NoEditable -> responderError(HttpStatusCode.Conflict, "no-editable")
-    is ResultadoPago.Rechazado -> responderError(HttpStatusCode.UnprocessableEntity, "pago-rechazado", listOf(resultado.motivo))
+    is ResultadoPago.Rechazado -> responderError(HttpStatusCode.UnprocessableEntity, "pago-rechazado", listOf(resultado.motivo.name))
 }
 
 private suspend fun ApplicationCall.responderRadicacion(resultado: ResultadoRadicacion) = when (resultado) {

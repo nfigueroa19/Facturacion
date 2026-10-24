@@ -24,6 +24,7 @@ data class FilaSolicitud(
     @SerialName("total_novedades") val totalNovedades: Int,
     @SerialName("validacion_facturador") val validacionFacturador: String?,
     @SerialName("validacion_fecha") val validacionFecha: String?,
+    val atencion: String? = null,
 )
 
 /** Fila de la tabla `novedades`: `orden` es la posición de la novedad dentro de su solicitud. */
@@ -39,6 +40,7 @@ internal fun SolicitudPrefactura.fila(json: Json) = FilaSolicitud(
     totalNovedades = novedades.size,
     validacionFacturador = validacion?.facturador,
     validacionFecha = validacion?.fecha?.fechaAppwrite(),
+    atencion = atencion.json(json),
 )
 
 internal fun SolicitudPrefactura.filasNovedades(): List<FilaNovedad> = novedades.mapIndexed { orden, novedad ->
@@ -55,6 +57,7 @@ internal fun FilaSolicitud.solicitud(novedades: List<FilaNovedad>, json: Json) =
     novedades = novedades.filter { it.orden < totalNovedades }.sortedBy { it.orden }.map { it.novedad() }
         .also { check(it.size == totalNovedades) { "Faltan novedades de $consecutivo" } },
     validacion = validacionFacturador?.let { Validacion(it, requireNotNull(validacionFecha) { "Validación sin fecha en $consecutivo" }.instanteAppwrite()) },
+    atencion = atencionDe(atencion, json, consecutivo),
 )
 
 private fun FilaNovedad.novedad(): Novedad =

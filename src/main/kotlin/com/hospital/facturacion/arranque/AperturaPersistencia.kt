@@ -3,7 +3,9 @@ package com.hospital.facturacion.arranque
 import com.hospital.facturacion.data.cita.AgendaCitasMemoria
 import com.hospital.facturacion.data.cita.CitaRegistrada
 import com.hospital.facturacion.data.cita.leerCitasPrueba
+import com.hospital.facturacion.data.comunicacion.BandejaComunicacionesPostgres
 import com.hospital.facturacion.data.copago.PagosCopagoPostgres
+import com.hospital.facturacion.data.digiturno.GeneradorTurnosPostgres
 import com.hospital.facturacion.data.facturador.ClavePbkdf2
 import com.hospital.facturacion.data.facturador.DirectorioFacturadoresPostgres
 import com.hospital.facturacion.data.facturador.FacturadorPruebaJson
@@ -32,7 +34,7 @@ fun abrirPersistencia(configuracion: ConfiguracionAplicacion, secretos: FuenteSe
     }
 }
 
-// Con PostgreSQL la agenda sigue en memoria, como antes de Appwrite: el esquema no tiene tabla de citas.
+// Con PostgreSQL la agenda sigue en memoria: el esquema no tiene tabla de citas y las del call center se pierden al reiniciar.
 private fun persistenciaPostgres(
     configuracion: ConfiguracionBaseDatos,
     secretos: FuenteSecretos?,
@@ -41,13 +43,17 @@ private fun persistenciaPostgres(
 ): Persistencia {
     val base = abrirBaseDatos(configuracion, secretos)
     sembrarFacturadores(base, datos.facturadores)
+    val agenda = AgendaCitasMemoria(datos.citas)
     return Persistencia(
-        agenda = AgendaCitasMemoria(datos.citas),
+        agenda = agenda,
+        registroCitas = agenda,
         solicitudes = SolicitudPrefacturaRepositorioPostgres(base, Json),
         pagos = PagosCopagoPostgres(base),
         consecutivo = GeneradorConsecutivoPostgres(base),
         facturadores = DirectorioFacturadoresPostgres(base, ClavePbkdf2()),
         soportes = AlmacenSoportesPostgres(base, tamanoMaximoSoporteBytes),
+        comunicaciones = BandejaComunicacionesPostgres(base),
+        turnos = GeneradorTurnosPostgres(base),
         cerrar = base::close,
     )
 }

@@ -80,12 +80,14 @@ export function FlujoRadicacion({ cliente, token, prefactura, texto, onRadicada,
     setIndice(indice + 1);
   };
 
-  const pagar = async () => {
+  const pagar = async (medio: string) => {
     try {
-      setPago(await conSesion(() => cliente.pagarCopago(token)));
-      return true;
+      const resultado = await conSesion(() => cliente.pagarCopago(token, medio));
+      if (resultado.tipo === "rechazado") return `copago.rechazo.${resultado.motivo}`;
+      setPago(resultado.pago);
+      return null;
     } catch {
-      return false;
+      return "copago.error";
     }
   };
 

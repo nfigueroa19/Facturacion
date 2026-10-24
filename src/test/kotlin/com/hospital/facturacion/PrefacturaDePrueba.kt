@@ -6,6 +6,9 @@ import com.hospital.facturacion.domain.cita.Cita
 import com.hospital.facturacion.domain.cita.CitaId
 import com.hospital.facturacion.domain.cita.Copago
 import com.hospital.facturacion.domain.cita.Regimen
+import com.hospital.facturacion.domain.comunicacion.Comunicacion
+import com.hospital.facturacion.domain.comunicacion.MotivoComunicacion
+import com.hospital.facturacion.domain.comunicacion.NotificadorPaciente
 import com.hospital.facturacion.domain.formulario.CampoFormulario
 import com.hospital.facturacion.domain.formulario.FormularioPrefactura
 import com.hospital.facturacion.domain.formulario.TipoCampo
@@ -54,6 +57,18 @@ class AgendaDePrueba(private vararg val citas: Cita) : AgendaCitas {
 
     override fun buscarPorAcceso(identificacion: String, codigoAcceso: String) =
         citas.firstOrNull { it.identificacionPaciente == identificacion && codigoAcceso == "CODIGO" }
+
+    override fun buscarPorIdentificacion(identificacion: String) = citas.filter { it.identificacionPaciente == identificacion }
+}
+
+/** Guarda cada aviso en lugar de enviarlo. */
+class NotificadorDePrueba : NotificadorPaciente {
+    val avisos = mutableListOf<Triple<Cita, MotivoComunicacion, Map<String, String>>>()
+
+    override fun notificar(cita: Cita, motivo: MotivoComunicacion, valores: Map<String, String>): Comunicacion? {
+        avisos += Triple(cita, motivo, valores)
+        return null
+    }
 }
 
 class SoportesEnMemoria(vararg cargados: TipoSoporte) : AlmacenSoportes {

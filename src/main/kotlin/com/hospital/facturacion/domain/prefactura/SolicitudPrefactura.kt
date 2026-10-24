@@ -11,18 +11,18 @@ data class SolicitudPrefactura(
     val datos: DatosFacturacion,
     val novedades: List<Novedad> = emptyList(),
     val validacion: Validacion? = null,
+    val atencion: Atencion = Atencion(),
 ) {
-    fun cambiarEstado(destino: EstadoPrefactura): CambioEstado = pasarA(destino) { this }
-
     fun registrarNovedad(novedad: Novedad): CambioEstado =
-        pasarA(EstadoPrefactura.PENDIENTE) { copy(novedades = novedades + novedad) }
+        cambiarEstado(EstadoPrefactura.PENDIENTE) { copy(novedades = novedades + novedad) }
 
-    fun aprobar(validacion: Validacion): CambioEstado = pasarA(EstadoPrefactura.APROBADO) { copy(validacion = validacion) }
+    fun aprobar(validacion: Validacion): CambioEstado = cambiarEstado(EstadoPrefactura.APROBADO) { copy(validacion = validacion) }
 
     fun corregir(datos: DatosFacturacion, fecha: Instant): CambioEstado =
-        pasarA(EstadoPrefactura.EN_REVISION) { copy(datos = datos, fechaEnvio = fecha) }
+        cambiarEstado(EstadoPrefactura.EN_REVISION) { copy(datos = datos, fechaEnvio = fecha) }
 
-    private fun pasarA(destino: EstadoPrefactura, ajuste: SolicitudPrefactura.() -> SolicitudPrefactura): CambioEstado =
+    /** Aplica la transición del diagrama y el ajuste de datos que la acompaña, o la rechaza sin cambiar nada. */
+    fun cambiarEstado(destino: EstadoPrefactura, ajuste: SolicitudPrefactura.() -> SolicitudPrefactura = { this }): CambioEstado =
         if (estado.puedePasarA(destino)) {
             CambioEstado.Aplicado(copy(estado = destino).ajuste())
         } else {

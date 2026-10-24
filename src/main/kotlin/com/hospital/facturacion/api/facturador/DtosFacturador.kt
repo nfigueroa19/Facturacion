@@ -43,6 +43,7 @@ data class DetalleSolicitudDto(
     val novedades: List<NovedadFacturadorDto>,
     val validacion: ValidacionDto?,
     val checklist: Set<ItemRevision>,
+    val atencion: AtencionDto,
 )
 
 @Serializable
@@ -67,6 +68,7 @@ fun SolicitudRevisable.aDetalle(formulario: FormularioPrefactura) = DetalleSolic
     novedades = solicitud.novedades.map { NovedadFacturadorDto(it.descripcion, it.facturador, it.fecha.toString()) },
     validacion = solicitud.validacion?.let { ValidacionDto(it.facturador, it.fecha.toString()) },
     checklist = ItemRevision.requeridosPara(expediente.cita),
+    atencion = solicitud.atencion.aDto(),
 )
 
 // Un valor cuyo campo ya no está en el formulario (se editó la configuración) se muestra con su clave.

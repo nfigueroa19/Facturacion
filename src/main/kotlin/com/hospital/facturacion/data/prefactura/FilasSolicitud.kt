@@ -16,11 +16,12 @@ import java.time.Instant
 
 internal const val GUARDAR_SOLICITUD = """
     INSERT INTO solicitud_prefactura
-        (consecutivo, cita, estado, fecha_envio, datos, novedades, validacion_facturador, validacion_fecha)
-    VALUES (?, ?, ?, ?, CAST(? AS jsonb), CAST(? AS jsonb), ?, ?)
+        (consecutivo, cita, estado, fecha_envio, datos, novedades, validacion_facturador, validacion_fecha, atencion)
+    VALUES (?, ?, ?, ?, CAST(? AS jsonb), CAST(? AS jsonb), ?, ?, CAST(? AS jsonb))
     ON CONFLICT (consecutivo) DO UPDATE SET estado = EXCLUDED.estado, fecha_envio = EXCLUDED.fecha_envio,
         datos = EXCLUDED.datos, novedades = EXCLUDED.novedades,
-        validacion_facturador = EXCLUDED.validacion_facturador, validacion_fecha = EXCLUDED.validacion_fecha
+        validacion_facturador = EXCLUDED.validacion_facturador, validacion_fecha = EXCLUDED.validacion_fecha,
+        atencion = EXCLUDED.atencion
 """
 
 /** Forma de cada novedad dentro de la columna JSONB `novedades`. */
@@ -36,6 +37,7 @@ internal fun SolicitudPrefactura.columnas(json: Json): Array<Any?> = arrayOf(
     json.encodeToString(novedades.map { NovedadFila(it.descripcion, it.facturador, it.fecha.toString()) }),
     validacion?.facturador,
     validacion?.fecha?.utc(),
+    atencion.json(json),
 )
 
 internal fun ResultSet.solicitud(json: Json): SolicitudPrefactura {
@@ -49,6 +51,7 @@ internal fun ResultSet.solicitud(json: Json): SolicitudPrefactura {
         datos = DatosFacturacion(json.decodeFromString(getString("datos"))),
         novedades = json.decodeFromString<List<NovedadFila>>(getString("novedades")).map { it.novedad(consecutivo) },
         validacion = validador?.let { Validacion(it, requireNotNull(instante("validacion_fecha"))) },
+        atencion = atencionDe(getString("atencion"), json, consecutivo),
     )
 }
 

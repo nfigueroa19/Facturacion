@@ -3,7 +3,8 @@ import { vi } from "vitest";
 import { App, type Clientes } from "../App";
 import type { ClienteFacturador } from "../api/clienteFacturador";
 import type { ClientePaciente } from "../api/clientePaciente";
-import type { DetalleSolicitud, PrefacturaPaciente, ResumenSolicitud } from "../api/tipos";
+import type { ClientePersonal } from "../api/clientePersonal";
+import type { DetalleSolicitud, PrefacturaPaciente, ResumenSolicitud, Turno } from "../api/tipos";
 import type { ClienteContenido, Textos } from "../contenido/clienteContenido";
 import { ProveedorContenido } from "../contenido/ContenidoContexto";
 
@@ -62,6 +63,7 @@ export const DETALLE: DetalleSolicitud = {
   novedades: [],
   validacion: null,
   checklist: ["DATOS", "AUTORIZACION", "ORDEN_MEDICA"],
+  atencion: { ingreso: null, intentosFallidos: [], factura: null, anulacion: null },
 };
 
 export function clientePaciente(cambios: Partial<ClientePaciente> = {}): ClientePaciente {
@@ -69,7 +71,7 @@ export function clientePaciente(cambios: Partial<ClientePaciente> = {}): Cliente
     iniciarSesion: vi.fn(() => Promise.resolve("token")),
     prefactura: vi.fn(() => Promise.resolve(PREFACTURA)),
     subirSoporte: vi.fn(() => Promise.resolve({ tipo: "cargado" as const })),
-    pagarCopago: vi.fn(() => Promise.resolve({ referencia: "SIM-1", valorPesos: 5000, fecha: "2026-10-22T13:00:00Z" })),
+    pagarCopago: vi.fn(() => Promise.resolve({ tipo: "pagado" as const, pago: { referencia: "SIM-1", valorPesos: 5000, fecha: "2026-10-22T13:00:00Z" } })),
     radicar: vi.fn(() => Promise.resolve({ tipo: "radicada" as const, consecutivo: "PF-000001", estado: "EN_REVISION" as const })),
     ...cambios,
   };
@@ -84,6 +86,31 @@ export function clienteFacturador(cambios: Partial<ClienteFacturador> = {}): Cli
     aprobar: vi.fn(() => Promise.resolve()),
     registrarNovedad: vi.fn(() => Promise.resolve()),
     confirmarLlegada: vi.fn(() => Promise.resolve()),
+    registrarIngreso: vi.fn(() => Promise.resolve()),
+    anularIngreso: vi.fn(() => Promise.resolve()),
+    registrarIntentoFallido: vi.fn(() => Promise.resolve()),
+    registrarFactura: vi.fn(() => Promise.resolve()),
+    ...cambios,
+  };
+}
+
+export const TURNO_PRECONSULTA: Turno = {
+  turno: "P-001",
+  destino: "PRECONSULTA",
+  motivo: null,
+  cita: CITA,
+  consecutivo: "PF-000001",
+  estado: "LISTO_PARA_FACTURAR",
+  novedades: [],
+};
+
+export function clientePersonal(cambios: Partial<ClientePersonal> = {}): ClientePersonal {
+  return {
+    programarCita: vi.fn(() =>
+      Promise.resolve({ tipo: "programada" as const, programada: { identificacion: "1000000099", cita: CITA, codigoAcceso: "ABCD2345", sms: null } }),
+    ),
+    atenderLlegada: vi.fn(() => Promise.resolve(TURNO_PRECONSULTA)),
+    comunicaciones: vi.fn(() => Promise.resolve([])),
     ...cambios,
   };
 }
@@ -93,7 +120,7 @@ export function contenido(obtenerTextos: ClienteContenido["obtenerTextos"] = () 
 }
 
 export function montar(opciones: { contenido?: ClienteContenido; clientes?: Partial<Clientes>; ruta?: string } = {}) {
-  const clientes: Clientes = { paciente: clientePaciente(), facturador: clienteFacturador(), ...opciones.clientes };
+  const clientes: Clientes = { paciente: clientePaciente(), facturador: clienteFacturador(), personal: clientePersonal(), ...opciones.clientes };
   return render(
     <ProveedorContenido cliente={opciones.contenido ?? contenido()}>
       <App clientes={clientes} ruta={opciones.ruta ?? "/"} />

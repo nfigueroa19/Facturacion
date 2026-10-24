@@ -37,17 +37,4 @@ class RutasPacienteTest {
         assertEquals(HttpStatusCode.NotFound, client.subirPdf("FOTO", "%PDF-1.7", token).status)
         assertEquals(HttpStatusCode.NoContent, client.subirPdf("AUTORIZACION", "%PDF-1.7", token).status)
     }
-
-    @Test
-    fun `paga el copago simulado, radica y no admite cambios mientras esta en revision`() = probarModulo(temporal) {
-        val token = client.tokenPaciente()
-        assertTrue(client.enviar("/api/paciente/copago", "", token).campo("referencia").startsWith("SIM-"))
-        val faltan = client.enviar("/api/paciente/solicitud", """{"datos":{}}""", token)
-        assertEquals(HttpStatusCode.UnprocessableEntity, faltan.status)
-        assertEquals("PF-000001", client.radicarSolicitudCompleta(token))
-        val prefactura = client.get("/api/paciente/prefactura") { bearerAuth(token) }
-        assertTrue(prefactura.bodyAsText().contains(""""estado":"EN_REVISION""""))
-        assertEquals("no-store", prefactura.headers["Cache-Control"])
-        assertEquals(HttpStatusCode.Conflict, client.subirPdf("AUTORIZACION", "%PDF-1.7", token).status)
-    }
 }

@@ -44,7 +44,7 @@ class RadicarSolicitud(
         val radicada = when (val cambio = actual?.corregir(datos, reloj.instant())) {
             null -> SolicitudPrefactura(consecutivos.siguiente(), cita, EstadoPrefactura.EN_REVISION, reloj.instant(), datos)
             is CambioEstado.Aplicado -> cambio.solicitud
-            is CambioEstado.Rechazado -> return ResultadoRadicacion.NoEditable
+            is CambioEstado.Rechazado, is CambioEstado.Incumple -> return ResultadoRadicacion.NoEditable
         }
         solicitudes.guardar(radicada)
         return ResultadoRadicacion.Radicada(radicada)

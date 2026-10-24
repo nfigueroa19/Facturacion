@@ -8,12 +8,16 @@ import com.hospital.facturacion.domain.formulario.FormularioPrefactura
 import com.hospital.facturacion.domain.prefactura.ConsecutivoRadicado
 import com.hospital.facturacion.domain.prefactura.EstadoPrefactura
 import com.hospital.facturacion.domain.soporte.TipoSoporte
+import com.hospital.facturacion.service.facturador.AnularIngreso
 import com.hospital.facturacion.service.facturador.AprobarSolicitud
 import com.hospital.facturacion.service.facturador.ConfirmarLlegada
 import com.hospital.facturacion.service.facturador.ConsultarSolicitud
 import com.hospital.facturacion.service.facturador.IniciarSesionFacturador
 import com.hospital.facturacion.service.facturador.ListarSolicitudes
 import com.hospital.facturacion.service.facturador.ObtenerSoporte
+import com.hospital.facturacion.service.facturador.RegistrarFactura
+import com.hospital.facturacion.service.facturador.RegistrarIngreso
+import com.hospital.facturacion.service.facturador.RegistrarIntentoFacturacion
 import com.hospital.facturacion.service.facturador.RegistrarNovedad
 import com.hospital.facturacion.service.facturador.ResultadoAccion
 import io.ktor.http.ContentType
@@ -40,6 +44,10 @@ class CasosFacturador(
     val aprobar: AprobarSolicitud,
     val registrarNovedad: RegistrarNovedad,
     val confirmarLlegada: ConfirmarLlegada,
+    val registrarIngreso: RegistrarIngreso,
+    val anularIngreso: AnularIngreso,
+    val registrarIntento: RegistrarIntentoFacturacion,
+    val registrarFactura: RegistrarFactura,
 )
 
 fun Route.rutasFacturador(casos: CasosFacturador) {
@@ -79,6 +87,23 @@ private fun Route.rutasSolicitudes(casos: CasosFacturador) = route("/solicitudes
             call.responderAccion(casos.registrarNovedad.ejecutar(consecutivo(), call.receive<NovedadNuevaDto>().descripcion, facturador()))
         }
         post("/llegada") { call.responderAccion(casos.confirmarLlegada.ejecutar(consecutivo())) }
+        rutasAtencion(casos)
+    }
+}
+
+// Pasos del diagrama del facturador después de la aprobación: ingreso, anulación, intentos de facturación y factura.
+private fun Route.rutasAtencion(casos: CasosFacturador) {
+    post("/ingreso") {
+        call.responderAccion(casos.registrarIngreso.ejecutar(consecutivo(), call.receive<NumeroDinamicaDto>().numero, facturador()))
+    }
+    post("/anulacion") {
+        call.responderAccion(casos.anularIngreso.ejecutar(consecutivo(), call.receive<ObservacionDto>().texto, facturador()))
+    }
+    post("/intentos-facturacion") {
+        call.responderAccion(casos.registrarIntento.ejecutar(consecutivo(), call.receive<ObservacionDto>().texto, facturador()))
+    }
+    post("/factura") {
+        call.responderAccion(casos.registrarFactura.ejecutar(consecutivo(), call.receive<NumeroDinamicaDto>().numero, facturador()))
     }
 }
 
@@ -95,4 +120,6 @@ private suspend fun ApplicationCall.responderAccion(resultado: ResultadoAccion) 
     is ResultadoAccion.ChecklistIncompleto ->
         responderError(HttpStatusCode.UnprocessableEntity, "checklist", resultado.faltantes.map { it.name })
     ResultadoAccion.NovedadInvalida -> responderError(HttpStatusCode.UnprocessableEntity, "novedad")
+    ResultadoAccion.DatoInvalido -> responderError(HttpStatusCode.UnprocessableEntity, "dato")
+    is ResultadoAccion.ReglaIncumplida -> responderError(HttpStatusCode.Conflict, "atencion", listOf(resultado.motivo.name))
 }

@@ -38,6 +38,10 @@ data class PrefacturaPacienteDto(
     val tamanoMaximoSoporteBytes: Int,
 )
 
+/** Token del medio de pago que la pasarela entregó al navegador; nunca el número de la tarjeta. */
+@Serializable
+data class MedioPagoDto(val token: String)
+
 @Serializable
 data class DatosPacienteDto(val datos: Map<String, String>)
 

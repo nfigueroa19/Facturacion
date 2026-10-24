@@ -14,7 +14,7 @@ import kotlinx.serialization.json.Json
 import org.slf4j.Logger
 
 class ComposicionContenido(configuracion: ConfiguracionContenido, registro: Logger) {
-    private val fuente = FuenteContenidoRecargable(LectorContenidoJson(configuracion.archivo, Json), registro)
+    val fuente = FuenteContenidoRecargable(LectorContenidoJson(configuracion.archivo, Json), registro)
     private val almacen = AlmacenImagenesArchivo(
         DirectorioSeguro(configuracion.directorioImagenes),
         configuracion.tamanoMaximoImagenBytes,

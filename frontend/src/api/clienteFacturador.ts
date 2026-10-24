@@ -15,6 +15,10 @@ export interface ClienteFacturador {
   aprobar(token: string, consecutivo: string, revisados: readonly ItemRevision[]): Promise<void>;
   registrarNovedad(token: string, consecutivo: string, descripcion: string): Promise<void>;
   confirmarLlegada(token: string, consecutivo: string): Promise<void>;
+  registrarIngreso(token: string, consecutivo: string, numero: string): Promise<void>;
+  anularIngreso(token: string, consecutivo: string, motivo: string): Promise<void>;
+  registrarIntentoFallido(token: string, consecutivo: string, error: string): Promise<void>;
+  registrarFactura(token: string, consecutivo: string, numero: string): Promise<void>;
 }
 
 export function clienteFacturadorHttp(urlApi: string): ClienteFacturador {
@@ -38,5 +42,13 @@ export function clienteFacturadorHttp(urlApi: string): ClienteFacturador {
     registrarNovedad: (token, consecutivo, descripcion) =>
       pedirSinRespuesta(solicitud(consecutivo, "/novedades"), { metodo: "POST", token, json: { descripcion } }),
     confirmarLlegada: (token, consecutivo) => pedirSinRespuesta(solicitud(consecutivo, "/llegada"), { metodo: "POST", token }),
+    registrarIngreso: (token, consecutivo, numero) =>
+      pedirSinRespuesta(solicitud(consecutivo, "/ingreso"), { metodo: "POST", token, json: { numero } }),
+    anularIngreso: (token, consecutivo, motivo) =>
+      pedirSinRespuesta(solicitud(consecutivo, "/anulacion"), { metodo: "POST", token, json: { texto: motivo } }),
+    registrarIntentoFallido: (token, consecutivo, error) =>
+      pedirSinRespuesta(solicitud(consecutivo, "/intentos-facturacion"), { metodo: "POST", token, json: { texto: error } }),
+    registrarFactura: (token, consecutivo, numero) =>
+      pedirSinRespuesta(solicitud(consecutivo, "/factura"), { metodo: "POST", token, json: { numero } }),
   };
 }

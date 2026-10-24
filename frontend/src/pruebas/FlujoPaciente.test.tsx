@@ -34,7 +34,7 @@ describe("Flujo del paciente", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Enviar solicitud" }));
 
     expect(paciente.subirSoporte).toHaveBeenCalledTimes(2);
-    expect(paciente.pagarCopago).toHaveBeenCalledWith("token");
+    expect(paciente.pagarCopago).toHaveBeenCalledWith("token", "tok_prueba_aprobada");
     expect(paciente.radicar).toHaveBeenCalledWith("token", { "nombre-padre": "Padre de prueba" });
     expect(paciente.prefactura).toHaveBeenCalledTimes(2);
   });

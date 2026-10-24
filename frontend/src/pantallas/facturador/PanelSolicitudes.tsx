@@ -1,4 +1,4 @@
-import { Button, Skeleton } from "@heroui/react";
+import { Skeleton } from "@heroui/react";
 import { useEffect, useState } from "react";
 import type { ClienteFacturador, SesionFacturador } from "../../api/clienteFacturador";
 import { esSesionVencida } from "../../api/http";
@@ -31,15 +31,7 @@ export function PanelSolicitudes({ cliente, sesion, texto, onSalir }: Props) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold text-brand-navy">{texto("solicitudes.titulo")}</h1>
-        <div className="flex items-center gap-3 text-sm text-ink-muted">
-          <span>{sesion.nombre}</span>
-          <Button variant="outline" size="sm" onPress={() => onSalir(null)}>
-            {texto("facturador.salir")}
-          </Button>
-        </div>
-      </div>
+      <h1 className="text-xl font-bold text-brand-navy">{texto("solicitudes.titulo")}</h1>
       <BarraFiltros filtros={filtros} texto={texto} onCambiar={setFiltros} />
       <div className={seleccionada === null ? "" : "grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,560px)]"}>
         <section aria-label={texto("solicitudes.titulo")} className="flex min-w-0 flex-col gap-2">

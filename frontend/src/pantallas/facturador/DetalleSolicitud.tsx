@@ -9,6 +9,7 @@ import type { Texto } from "../../contenido/ContenidoContexto";
 import { conValores, fechaHora, fechaLarga } from "../../formato";
 import { useCarga } from "../../useCarga";
 import { textoCopago } from "../../componentes/textoCopago";
+import { HistorialAtencion } from "./AccionesAtencion";
 import { AccionesSolicitud } from "./AccionesSolicitud";
 import { VisorSoportes } from "./VisorSoportes";
 
@@ -47,7 +48,7 @@ export function DetalleSolicitud({ cliente, token, consecutivo, texto, onCerrar,
       setAviso({ exito: true, clave: exito });
     } catch (error) {
       if (esSesionVencida(error)) return onSesionVencida();
-      setAviso({ exito: false, clave: error instanceof ErrorApi && error.estado === 409 ? "acciones.conflicto" : "acciones.error" });
+      setAviso({ exito: false, clave: claveDeError(error) });
     }
     titulo.current?.focus();
     recargar();
@@ -89,7 +90,7 @@ export function DetalleSolicitud({ cliente, token, consecutivo, texto, onCerrar,
           }
           acciones={
             <AccionesSolicitud
-              key={carga.valor.resumen.estado}
+              key={`${carga.valor.resumen.estado}-${carga.valor.atencion.ingreso?.valor ?? ""}-${carga.valor.atencion.intentosFallidos.length}`}
               detalle={carga.valor}
               texto={texto}
               aprobar={(revisados) => ejecutar(() => cliente.aprobar(token, consecutivo, revisados), "acciones.hecho.aprobar")}
@@ -97,6 +98,13 @@ export function DetalleSolicitud({ cliente, token, consecutivo, texto, onCerrar,
                 ejecutar(() => cliente.registrarNovedad(token, consecutivo, descripcion), "acciones.hecho.novedad")
               }
               confirmarLlegada={() => ejecutar(() => cliente.confirmarLlegada(token, consecutivo), "acciones.hecho.llegada")}
+              atencion={{
+                registrarIngreso: (numero) => ejecutar(() => cliente.registrarIngreso(token, consecutivo, numero), "acciones.hecho.ingreso"),
+                anularIngreso: (motivo) => ejecutar(() => cliente.anularIngreso(token, consecutivo, motivo), "acciones.hecho.anulacion"),
+                registrarIntentoFallido: (error) =>
+                  ejecutar(() => cliente.registrarIntentoFallido(token, consecutivo, error), "acciones.hecho.intento"),
+                registrarFactura: (numero) => ejecutar(() => cliente.registrarFactura(token, consecutivo, numero), "acciones.hecho.factura"),
+              }}
             />
           }
         />
@@ -111,6 +119,14 @@ export function DetalleSolicitud({ cliente, token, consecutivo, texto, onCerrar,
       )}
     </aside>
   );
+}
+
+/** El backend explica el rechazo con un código estable; cada uno tiene su texto en contenido.json. */
+function claveDeError(error: unknown): string {
+  if (!(error instanceof ErrorApi)) return "acciones.error";
+  if (error.codigo === "atencion") return `acciones.atencion.${error.detalle[0] ?? "ESTADO_NO_PERMITE"}`;
+  if (error.codigo === "dato") return "acciones.dato-invalido";
+  return error.estado === 409 ? "acciones.conflicto" : "acciones.error";
 }
 
 function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) {
@@ -184,6 +200,9 @@ function ContenidoDetalle({ detalle, texto, visor, acciones }: PropsContenido) {
           {conValores(texto("detalle.validacion"), { facturador: detalle.validacion.facturador, fecha: fechaHora(detalle.validacion.fecha) })}
         </p>
       )}
+      <Seccion titulo={texto("detalle.atencion")}>
+        <HistorialAtencion atencion={detalle.atencion} texto={texto} />
+      </Seccion>
       <Seccion titulo={texto("detalle.acciones")}>{acciones}</Seccion>
     </>
   );

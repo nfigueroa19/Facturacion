@@ -42,9 +42,13 @@ Citas (`config/citas-prueba.json`). La fecha de cada cita se cuenta desde el dí
 | 1000000002 | PRUEBA2 | Mañana | Sin copago, subsidiado |
 | 1000000003 | PRUEBA3 | En dos días | $5.000, contributivo |
 
-Panel del facturador (`http://localhost:5173/facturador`): usuario `facturador`, clave `prueba123`. El archivo `config/facturadores-prueba.json` guarda solo el hash de la clave.
+Módulos del personal: facturación (`http://localhost:5173/facturador`), call center (`/callcenter`) y digiturno (`/digiturno`). Los tres usan el mismo ingreso: usuario `facturador`, clave `prueba123`. El archivo `config/facturadores-prueba.json` guarda solo el hash de la clave.
 
-El pago del copago es simulado: aprueba siempre y no cobra dinero. Las solicitudes, los PDF, los pagos y los facturadores se guardan en PostgreSQL y siguen ahí después de reiniciar el servidor. Las sesiones se guardan en memoria: tras un reinicio hay que volver a ingresar.
+El call center crea citas nuevas con su ID de acceso. Los SMS se simulan y se leen con el botón "Comunicaciones" de los módulos del personal. Los textos de los SMS están en `config/contenido.json`, claves `sms.CITA_ASIGNADA` y `sms.NOVEDAD_REGISTRADA`.
+
+El copago se paga con tarjetas de prueba y no cobra dinero: `4242 4242 4242 4242` aprueba; las demás opciones muestran un rechazo para probar el reintento.
+
+El ingreso y la factura solo se registran el día de la cita: use la cita de `1000000001` o cree una para hoy desde el call center. Las solicitudes, los PDF, los pagos y los facturadores se guardan en PostgreSQL y siguen ahí después de reiniciar el servidor. Las sesiones se guardan en memoria: tras un reinicio hay que volver a ingresar.
 
 Al arrancar, el servidor copia a la base los usuarios de `config/facturadores-prueba.json`. Si un usuario ya existe, actualiza su nombre y su clave; quitarlo del archivo no lo borra de la base.
 

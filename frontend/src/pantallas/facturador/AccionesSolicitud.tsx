@@ -2,6 +2,7 @@ import { Button, Checkbox, CheckboxGroup, Description, Label, TextArea, TextFiel
 import { useState } from "react";
 import type { DetalleSolicitud, ItemRevision } from "../../api/tipos";
 import type { Texto } from "../../contenido/ContenidoContexto";
+import { AccionesDiaDeLaCita, type AccionesDeAtencion } from "./AccionesAtencion";
 
 interface Props {
   readonly detalle: DetalleSolicitud;
@@ -9,17 +10,25 @@ interface Props {
   readonly aprobar: (revisados: readonly ItemRevision[]) => Promise<void>;
   readonly registrarNovedad: (descripcion: string) => Promise<void>;
   readonly confirmarLlegada: () => Promise<void>;
+  readonly atencion: AccionesDeAtencion;
 }
 
 /** Acciones del diagrama del facturador según el estado actual de la solicitud. */
-export function AccionesSolicitud({ detalle, texto, aprobar, registrarNovedad, confirmarLlegada }: Props) {
+export function AccionesSolicitud({ detalle, texto, aprobar, registrarNovedad, confirmarLlegada, atencion }: Props) {
   const estado = detalle.resumen.estado;
   if (estado === "EN_REVISION") return <Revision detalle={detalle} texto={texto} aprobar={aprobar} registrarNovedad={registrarNovedad} />;
-  if (estado === "APROBADO") return <Llegada texto={texto} confirmarLlegada={confirmarLlegada} />;
+  if (estado === "APROBADO" || estado === "LISTO_PARA_FACTURAR") {
+    return (
+      <div className="flex flex-col gap-5">
+        {estado === "APROBADO" && <Llegada texto={texto} confirmarLlegada={confirmarLlegada} />}
+        <AccionesDiaDeLaCita detalle={detalle} texto={texto} acciones={atencion} />
+      </div>
+    );
+  }
   return <p className="text-sm text-ink">{texto(`acciones.sin-acciones.${estado}`)}</p>;
 }
 
-function Revision({ detalle, texto, aprobar, registrarNovedad }: Omit<Props, "confirmarLlegada">) {
+function Revision({ detalle, texto, aprobar, registrarNovedad }: Pick<Props, "detalle" | "texto" | "aprobar" | "registrarNovedad">) {
   const [revisados, setRevisados] = useState<readonly string[]>([]);
   const [novedad, setNovedad] = useState("");
   const [error, setError] = useState<"checklist" | "novedad" | null>(null);

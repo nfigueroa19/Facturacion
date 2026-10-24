@@ -29,9 +29,11 @@ export interface Cita {
   readonly fecha: string;
   readonly medico: string;
   readonly especialidad: string;
-  readonly regimen: "CONTRIBUTIVO" | "SUBSIDIADO";
+  readonly regimen: Regimen;
   readonly copagoPesos: number | null;
 }
+
+export type Regimen = "CONTRIBUTIVO" | "SUBSIDIADO";
 
 export interface Campo {
   readonly clave: string;
@@ -79,12 +81,74 @@ export interface ResumenSolicitud {
   readonly pago: Pago | null;
 }
 
+/** Registro del facturador: número de Dinámica u observación, quién y cuándo. */
+export interface Registro {
+  readonly valor: string;
+  readonly facturador: string;
+  readonly fecha: string;
+}
+
+/** Lo que pasa desde el día de la cita: ingreso, intentos fallidos de facturación, factura o anulación. */
+export interface Atencion {
+  readonly ingreso: Registro | null;
+  readonly intentosFallidos: readonly Registro[];
+  readonly factura: Registro | null;
+  readonly anulacion: Registro | null;
+}
+
 export interface DetalleSolicitud {
   readonly resumen: ResumenSolicitud;
   readonly datos: readonly { readonly clave: string; readonly etiqueta: string; readonly valor: string }[];
   readonly novedades: readonly (Novedad & { readonly facturador: string })[];
   readonly validacion: { readonly facturador: string; readonly fecha: string } | null;
   readonly checklist: readonly ItemRevision[];
+  readonly atencion: Atencion;
+}
+
+export type MotivoRechazoAtencion = "ESTADO_NO_PERMITE" | "SIN_INGRESO" | "INGRESO_YA_REGISTRADO" | "FUERA_DEL_DIA_DE_LA_CITA";
+export type MotivoRechazoPago = "RECHAZADA" | "FONDOS_INSUFICIENTES" | "ERROR_PASARELA" | "MEDIO_INVALIDO";
+
+export type ErrorNuevaCita = "IDENTIFICACION" | "CELULAR" | "FECHA" | "MEDICO" | "ESPECIALIDAD" | "COPAGO";
+
+export interface NuevaCita {
+  readonly identificacion: string;
+  readonly celular: string;
+  readonly fecha: string;
+  readonly medico: string;
+  readonly especialidad: string;
+  readonly regimen: Regimen;
+  readonly copagoPesos: number | null;
+}
+
+export type EstadoEnvio = "ENVIADO" | "SIMULADO" | "FALLIDO";
+
+export interface Comunicacion {
+  readonly cita: string;
+  readonly motivo: "CITA_ASIGNADA" | "NOVEDAD_REGISTRADA";
+  readonly destino: string;
+  readonly texto: string;
+  readonly estado: EstadoEnvio;
+  readonly canal: string;
+  readonly fecha: string;
+}
+
+export interface CitaProgramada {
+  readonly identificacion: string;
+  readonly cita: Cita;
+  readonly codigoAcceso: string;
+  readonly sms: Comunicacion | null;
+}
+
+export type MotivoVentanilla = "SIN_CITA_HOY" | "SIN_RADICAR" | "EN_REVISION" | "CON_NOVEDADES" | "INGRESO_ANULADO";
+
+export interface Turno {
+  readonly turno: string;
+  readonly destino: "PRECONSULTA" | "FACTURACION";
+  readonly motivo: MotivoVentanilla | null;
+  readonly cita: Cita | null;
+  readonly consecutivo: string | null;
+  readonly estado: EstadoPrefactura | null;
+  readonly novedades: readonly Novedad[];
 }
 
 /** El paciente solo cambia su información antes de radicar o cuando la solicitud tiene novedades. */
