@@ -44,7 +44,7 @@ Citas (`config/citas-prueba.json`). La fecha de cada cita se cuenta desde el dí
 
 Módulos del personal: facturación (`http://localhost:5173/facturador`), call center (`/callcenter`) y digiturno (`/digiturno`). Los tres usan el mismo ingreso: usuario `facturador`, clave `prueba123`. El archivo `config/facturadores-prueba.json` guarda solo el hash de la clave.
 
-El call center crea citas nuevas con su ID de acceso. Los SMS se simulan y se leen con el botón "Comunicaciones" de los módulos del personal. Los textos de los SMS están en `config/contenido.json`, claves `sms.CITA_ASIGNADA` y `sms.NOVEDAD_REGISTRADA`.
+El call center crea citas nuevas con su ID de acceso. Los SMS se simulan y se leen con el botón "Comunicaciones" de los módulos del personal. Los textos de los SMS están en `config/contenido.json`, claves `sms.CITA_ASIGNADA`, `sms.SOLICITUD_RADICADA` y `sms.NOVEDAD_REGISTRADA`.
 
 El copago se paga con tarjetas de prueba y no cobra dinero: `4242 4242 4242 4242` aprueba; las demás opciones muestran un rechazo para probar el reintento.
 

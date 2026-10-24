@@ -15,11 +15,14 @@ import com.hospital.facturacion.domain.soporte.MotivoRechazoPdf
 import com.hospital.facturacion.domain.soporte.TipoSoporte
 import com.hospital.facturacion.service.paciente.CargarSoporte
 import com.hospital.facturacion.service.paciente.ConsultarPrefacturaPaciente
+import com.hospital.facturacion.service.paciente.ImpedimentoPago
 import com.hospital.facturacion.service.paciente.IniciarSesionPaciente
 import com.hospital.facturacion.service.paciente.PagarCopago
+import com.hospital.facturacion.service.paciente.PrepararPagoCopago
 import com.hospital.facturacion.service.paciente.RadicarSolicitud
 import com.hospital.facturacion.service.paciente.ResultadoCarga
 import com.hospital.facturacion.service.paciente.ResultadoPago
+import com.hospital.facturacion.service.paciente.ResultadoPreparacion
 import com.hospital.facturacion.service.paciente.ResultadoRadicacion
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
@@ -40,6 +43,7 @@ class CasosPaciente(
     val iniciarSesion: IniciarSesionPaciente,
     val consultar: ConsultarPrefacturaPaciente,
     val cargarSoporte: CargarSoporte,
+    val prepararPago: PrepararPagoCopago,
     val pagarCopago: PagarCopago,
     val radicar: RadicarSolicitud,
     val tamanoMaximoSoporteBytes: Int,
@@ -56,9 +60,10 @@ fun Route.rutasPaciente(casos: CasosPaciente) {
         authenticate(AUTENTICACION_PACIENTE) {
             get("/prefactura") { conCita(casos) { call.respond(casos.consultar.ejecutar(it).aDto(casos.formulario, casos.tamanoMaximoSoporteBytes)) } }
             put("/soportes/{tipo}") { conCita(casos) { cargarSoporte(call, casos, it) } }
+            post("/copago/checkout") { conCita(casos) { call.responderPreparacion(casos.prepararPago.ejecutar(it)) } }
             post("/copago") { conCita(casos) { pagarCopago(call, casos, it) } }
             post("/solicitud") {
-                conCita(casos) { call.responderRadicacion(casos.radicar.ejecutar(it.id, call.receive<DatosPacienteDto>().datos)) }
+                conCita(casos) { call.responderRadicacion(casos.radicar.ejecutar(it, call.receive<DatosPacienteDto>().datos)) }
             }
         }
     }
@@ -88,12 +93,21 @@ private suspend fun pagarCopago(call: ApplicationCall, casos: CasosPaciente, cit
     call.responderPago(casos.pagarCopago.ejecutar(cita, medio))
 }
 
+private suspend fun ApplicationCall.responderPreparacion(resultado: ResultadoPreparacion) = when (resultado) {
+    is ResultadoPreparacion.Lista -> respond(resultado.intencion.aDto())
+    is ImpedimentoPago -> responderImpedimento(resultado)
+}
+
 private suspend fun ApplicationCall.responderPago(resultado: ResultadoPago) = when (resultado) {
     is ResultadoPago.Pagado -> respond(resultado.pago.aDto())
+    is ResultadoPago.Rechazado -> responderError(HttpStatusCode.UnprocessableEntity, "pago-rechazado", listOf(resultado.motivo.name))
+    is ImpedimentoPago -> responderImpedimento(resultado)
+}
+
+private suspend fun ApplicationCall.responderImpedimento(impedimento: ImpedimentoPago) = when (impedimento) {
     ResultadoPago.SinCopago -> responderError(HttpStatusCode.Conflict, "sin-copago")
     ResultadoPago.YaPagado -> responderError(HttpStatusCode.Conflict, "ya-pagado")
     ResultadoPago.NoEditable -> responderError(HttpStatusCode.Conflict, "no-editable")
-    is ResultadoPago.Rechazado -> responderError(HttpStatusCode.UnprocessableEntity, "pago-rechazado", listOf(resultado.motivo.name))
 }
 
 private suspend fun ApplicationCall.responderRadicacion(resultado: ResultadoRadicacion) = when (resultado) {

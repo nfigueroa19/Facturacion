@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ClientePaciente } from "../../api/clientePaciente";
 import { esSesionVencida } from "../../api/http";
+import type { PasarelaNavegador } from "../../api/pasarelaWompi";
 import type { CatalogoPruebas } from "../../api/tipos";
 import { admiteCambiosDelPaciente } from "../../api/tipos";
 import { DatosPrueba } from "../../componentes/DatosPrueba";
@@ -15,11 +16,12 @@ import { PantallaEstado } from "./PantallaEstado";
 /** El token vive solo en memoria: al recargar la página el paciente ingresa de nuevo. */
 interface Props {
   readonly cliente: ClientePaciente;
+  readonly pasarela: PasarelaNavegador;
   readonly texto: Texto;
   readonly catalogo: CatalogoPruebas | null;
 }
 
-export function AppPaciente({ cliente, texto, catalogo }: Props) {
+export function AppPaciente({ cliente, pasarela, texto, catalogo }: Props) {
   const [token, setToken] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
 
@@ -48,17 +50,18 @@ export function AppPaciente({ cliente, texto, catalogo }: Props) {
       </div>
     );
   }
-  return <SesionPaciente cliente={cliente} token={token} texto={texto} onSalir={salir} />;
+  return <SesionPaciente cliente={cliente} pasarela={pasarela} token={token} texto={texto} onSalir={salir} />;
 }
 
 interface PropsSesion {
   readonly cliente: ClientePaciente;
+  readonly pasarela: PasarelaNavegador;
   readonly token: string;
   readonly texto: Texto;
   readonly onSalir: (motivo: string | null) => void;
 }
 
-function SesionPaciente({ cliente, token, texto, onSalir }: PropsSesion) {
+function SesionPaciente({ cliente, pasarela, token, texto, onSalir }: PropsSesion) {
   const { carga, recargar } = useCarga((senal) => cliente.prefactura(token, senal), [token]);
   const [corrigiendo, setCorrigiendo] = useState(false);
   const vencida = carga.tipo === "error" && esSesionVencida(carga.error);
@@ -93,6 +96,7 @@ function SesionPaciente({ cliente, token, texto, onSalir }: PropsSesion) {
       // Tras releer, el flujo arranca de nuevo con los datos que guardó el servidor.
       key={prefactura.solicitud?.fechaEnvio ?? "nueva"}
       cliente={cliente}
+      pasarela={pasarela}
       token={token}
       prefactura={prefactura}
       texto={texto}

@@ -4,7 +4,6 @@ import com.hospital.facturacion.api.facturador.CasosFacturador
 import com.hospital.facturacion.api.paciente.CasosPaciente
 import com.hospital.facturacion.api.personal.CasosPersonal
 import com.hospital.facturacion.data.cita.GeneradorAccesoAleatorio
-import com.hospital.facturacion.data.copago.PasarelaPagosSimulada
 import com.hospital.facturacion.data.formulario.leerFormulario
 import com.hospital.facturacion.data.sesion.SesionesMemoria
 import com.hospital.facturacion.domain.cita.CitaId
@@ -28,6 +27,7 @@ import com.hospital.facturacion.service.paciente.CargarSoporte
 import com.hospital.facturacion.service.paciente.ConsultarPrefacturaPaciente
 import com.hospital.facturacion.service.paciente.IniciarSesionPaciente
 import com.hospital.facturacion.service.paciente.PagarCopago
+import com.hospital.facturacion.service.paciente.PrepararPagoCopago
 import com.hospital.facturacion.service.paciente.RadicarSolicitud
 import kotlinx.serialization.json.Json
 import java.security.SecureRandom
@@ -37,6 +37,7 @@ class ComposicionPrefactura(
     val configuracion: ConfiguracionSolicitudes,
     val persistencia: Persistencia,
     val notificador: NotificadorPaciente,
+    val pasarela: PasarelaCopago,
     val reloj: Clock,
     val aleatorio: SecureRandom,
 ) {
@@ -54,8 +55,9 @@ fun ComposicionPrefactura.casosPaciente() = with(persistencia) {
         iniciarSesion = IniciarSesionPaciente(agenda, sesionesPaciente),
         consultar = ConsultarPrefacturaPaciente(solicitudes, soportes, pagos),
         cargarSoporte = CargarSoporte(solicitudes, soportes, configuracion.tamanoMaximoSoporteBytes),
-        pagarCopago = PagarCopago(solicitudes, pagos, PasarelaPagosSimulada(aleatorio), reloj),
-        radicar = RadicarSolicitud(formulario, solicitudes, soportes, consecutivo, reloj),
+        prepararPago = PrepararPagoCopago(solicitudes, pagos, pasarela.checkout),
+        pagarCopago = PagarCopago(solicitudes, pagos, pasarela.cobro, reloj),
+        radicar = RadicarSolicitud(formulario, solicitudes, soportes, consecutivo, notificador, reloj),
         tamanoMaximoSoporteBytes = configuracion.tamanoMaximoSoporteBytes,
     )
 }

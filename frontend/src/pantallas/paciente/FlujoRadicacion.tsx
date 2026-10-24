@@ -2,6 +2,7 @@ import { Alert, Button } from "@heroui/react";
 import { useEffect, useRef, useState } from "react";
 import type { ClientePaciente } from "../../api/clientePaciente";
 import { ErrorApi, esSesionVencida } from "../../api/http";
+import type { PasarelaNavegador } from "../../api/pasarelaWompi";
 import { TIPOS_SOPORTE, type ErrorCampo, type Pago, type PrefacturaPaciente, type TipoSoporte } from "../../api/tipos";
 import type { Texto } from "../../contenido/ContenidoContexto";
 import { IndicadorPasos, type Paso } from "./IndicadorPasos";
@@ -12,6 +13,7 @@ import { ResumenCita } from "./ResumenCita";
 
 interface Props {
   readonly cliente: ClientePaciente;
+  readonly pasarela: PasarelaNavegador;
   readonly token: string;
   readonly prefactura: PrefacturaPaciente;
   readonly texto: Texto;
@@ -21,7 +23,7 @@ interface Props {
 }
 
 /** Datos, soportes y copago (si la cita lo tiene). La solicitud se envía al final, en una sola petición. */
-export function FlujoRadicacion({ cliente, token, prefactura, texto, onRadicada, onSesionVencida }: Props) {
+export function FlujoRadicacion({ cliente, pasarela, token, prefactura, texto, onRadicada, onSesionVencida }: Props) {
   const pasos: readonly Paso[] = ["datos", "soportes", ...(prefactura.cita.copagoPesos === null ? [] : ["copago" as const])];
   const [indice, setIndice] = useState(0);
   const [valores, setValores] = useState<Readonly<Record<string, string>>>(prefactura.solicitud?.datos ?? {});
@@ -135,7 +137,14 @@ export function FlujoRadicacion({ cliente, token, prefactura, texto, onRadicada,
         />
       )}
       {paso === "copago" && prefactura.cita.copagoPesos !== null && (
-        <PasoCopago valor={prefactura.cita.copagoPesos} pago={pago} texto={texto} pagar={pagar} />
+        <PasoCopago
+          valor={prefactura.cita.copagoPesos}
+          pago={pago}
+          texto={texto}
+          preparar={() => conSesion(() => cliente.prepararCopago(token))}
+          pagar={pagar}
+          pasarela={pasarela}
+        />
       )}
       {paso !== "datos" && (
         <div className="flex flex-col-reverse gap-3 sm:flex-row">

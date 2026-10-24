@@ -13,8 +13,11 @@ value class Celular private constructor(val valor: String) {
     }
 }
 
-/** Por qué se le escribe al paciente: el SMS con el ID de acceso (flujo del paciente, paso 3) y las novedades (RN-12). */
-enum class MotivoComunicacion { CITA_ASIGNADA, NOVEDAD_REGISTRADA }
+/**
+ * Por qué se le escribe al paciente: el SMS con el ID de acceso (flujo del paciente, paso 3), el consecutivo al radicar
+ * (paso 9) y las novedades (RN-12).
+ */
+enum class MotivoComunicacion { CITA_ASIGNADA, SOLICITUD_RADICADA, NOVEDAD_REGISTRADA }
 
 /** SIMULADO: no salió del servidor y solo se ve en el panel de comunicaciones del personal. */
 enum class EstadoEnvio { ENVIADO, SIMULADO, FALLIDO }

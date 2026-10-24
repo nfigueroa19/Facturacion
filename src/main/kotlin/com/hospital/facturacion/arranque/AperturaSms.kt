@@ -35,7 +35,7 @@ private class ProveedorSms(val nombre: String, val canal: CanalSms, val autoriza
  * si no, todos los SMS se simulan. Con cualquier proveedor, solo salen los SMS a celulares autorizados; el resto se simula.
  */
 fun abrirCanalSms(secretos: FuenteSecretos?, http: HttpClient, registro: Logger): CanalSms {
-    fun valor(alias: String) = secretos?.leer(alias)?.consumir { String(it).trim() }
+    fun valor(alias: String) = secretos.textoOpcional(alias)
     val proveedor = labsMobile(::valor, http, registro) ?: twilio(::valor, http, registro)
     if (proveedor == null) {
         registro.info("SMS simulados: el almacén no tiene credenciales de LabsMobile ni de Twilio")

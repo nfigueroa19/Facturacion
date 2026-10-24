@@ -1,9 +1,12 @@
 package com.hospital.facturacion.service.paciente
 
+import com.hospital.facturacion.NotificadorDePrueba
 import com.hospital.facturacion.SoportesEnMemoria
+import com.hospital.facturacion.citaConCopago
 import com.hospital.facturacion.citaIdDePrueba
 import com.hospital.facturacion.data.prefactura.SolicitudPrefacturaRepositorioMemoria
 import com.hospital.facturacion.datosDePrueba
+import com.hospital.facturacion.domain.comunicacion.MotivoComunicacion
 import com.hospital.facturacion.domain.formulario.ErrorCampo
 import com.hospital.facturacion.domain.prefactura.ConsecutivoRadicado
 import com.hospital.facturacion.domain.prefactura.EstadoPrefactura
@@ -19,16 +22,19 @@ import kotlin.test.assertEquals
 class RadicarSolicitudTest {
     private val valores = mapOf("nombre-padre" to "Padre de prueba")
     private val completos = SoportesEnMemoria(*TipoSoporte.entries.toTypedArray())
+    private val notificador = NotificadorDePrueba()
 
     private fun radicar(repositorio: SolicitudPrefacturaRepositorioMemoria, soportes: SoportesEnMemoria = completos, datos: Map<String, String> = valores) =
-        RadicarSolicitud(formularioDePrueba, repositorio, soportes, { ConsecutivoRadicado("PF-9") }, relojDePrueba).ejecutar(citaIdDePrueba, datos)
+        RadicarSolicitud(formularioDePrueba, repositorio, soportes, { ConsecutivoRadicado("PF-9") }, notificador, relojDePrueba)
+            .ejecutar(citaConCopago, datos)
 
     @Test
-    fun `radica en EN_REVISION con consecutivo y fecha de envio`() {
+    fun `radica en EN_REVISION con consecutivo y fecha de envio y avisa el consecutivo por SMS`() {
         val repositorio = repositorioCon()
         val esperada = SolicitudPrefactura(ConsecutivoRadicado("PF-9"), citaIdDePrueba, EstadoPrefactura.EN_REVISION, relojDePrueba.instant(), datosDePrueba)
         assertEquals(ResultadoRadicacion.Radicada(esperada), radicar(repositorio))
         assertEquals(esperada, repositorio.buscarPorCita(citaIdDePrueba))
+        assertEquals(listOf(Triple(citaConCopago, MotivoComunicacion.SOLICITUD_RADICADA, mapOf("consecutivo" to "PF-9"))), notificador.avisos)
     }
 
     @Test
@@ -43,5 +49,6 @@ class RadicarSolicitudTest {
         assertEquals(ResultadoRadicacion.DatosInvalidos(mapOf("nombre-padre" to ErrorCampo.FALTA)), radicar(repositorioCon(), datos = emptyMap()))
         assertEquals(ResultadoRadicacion.FaltanSoportes(setOf(TipoSoporte.ORDEN_MEDICA)), radicar(repositorioCon(), SoportesEnMemoria(TipoSoporte.AUTORIZACION)))
         assertEquals(ResultadoRadicacion.NoEditable, radicar(repositorioCon(solicitudDePrueba(EstadoPrefactura.EN_REVISION))))
+        assertEquals(emptyList(), notificador.avisos)
     }
 }

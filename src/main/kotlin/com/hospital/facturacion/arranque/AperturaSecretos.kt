@@ -32,6 +32,9 @@ fun FuenteSecretos?.exigir(alias: String, adaptador: String): Secreto {
     return requireNotNull(almacen.leer(alias)) { "Falta el alias $alias en el almacén de secretos" }
 }
 
+/** Valor de texto de un alias opcional: null si no hay almacén o falta el alias. */
+fun FuenteSecretos?.textoOpcional(alias: String): String? = this?.leer(alias)?.consumir { String(it).trim() }
+
 // El archivo de clave es la forma de Docker secrets; la variable directa queda para desarrollo local.
 private fun claveDelAlmacen(entorno: (String) -> String?): CharArray? =
     entorno(VARIABLE_CLAVE_ARCHIVO)?.let { Files.readString(Path.of(it)).trim().toCharArray() }

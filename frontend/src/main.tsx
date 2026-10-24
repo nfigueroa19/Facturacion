@@ -5,6 +5,7 @@ import { clienteFacturadorHttp } from "./api/clienteFacturador";
 import { clientePacienteHttp } from "./api/clientePaciente";
 import { clientePersonalHttp } from "./api/clientePersonal";
 import { clientePruebasHttp } from "./api/clientePruebas";
+import { pasarelaWompi } from "./api/pasarelaWompi";
 import { clienteContenidoHttp } from "./contenido/clienteContenido";
 import { ProveedorContenido } from "./contenido/ContenidoContexto";
 import "./estilos.css";
@@ -17,6 +18,7 @@ const clientes = {
   facturador: clienteFacturadorHttp(URL_API),
   personal: clientePersonalHttp(URL_API),
   pruebas: clientePruebasHttp(URL_API),
+  pasarela: pasarelaWompi,
 };
 
 const raiz = document.getElementById("raiz");

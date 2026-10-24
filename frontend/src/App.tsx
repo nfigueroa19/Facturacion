@@ -3,6 +3,7 @@ import type { ClienteFacturador } from "./api/clienteFacturador";
 import type { ClientePaciente } from "./api/clientePaciente";
 import type { ClientePersonal } from "./api/clientePersonal";
 import type { ClientePruebas } from "./api/clientePruebas";
+import type { PasarelaNavegador } from "./api/pasarelaWompi";
 import type { CatalogoPruebas } from "./api/tipos";
 import { lectorDe, useContenido } from "./contenido/ContenidoContexto";
 import { EsqueletoAcceso } from "./componentes/EsqueletoAcceso";
@@ -17,6 +18,7 @@ export interface Clientes {
   readonly facturador: ClienteFacturador;
   readonly personal: ClientePersonal;
   readonly pruebas: ClientePruebas;
+  readonly pasarela: PasarelaNavegador;
 }
 
 const RUTAS_PERSONAL = { "/facturador": "facturador", "/callcenter": "callcenter", "/digiturno": "digiturno" } as const;
@@ -48,7 +50,7 @@ function PantallaSegunContenido({ clientes, superficie, navegar }: PropsPantalla
     case "listo": {
       const texto = lectorDe(estado.textos);
       return superficie === "paciente" ? (
-        <AppPaciente cliente={clientes.paciente} texto={texto} catalogo={catalogo} />
+        <AppPaciente cliente={clientes.paciente} pasarela={clientes.pasarela} texto={texto} catalogo={catalogo} />
       ) : (
         <AppPersonal clientes={clientes} superficie={superficie} texto={texto} navegar={navegar} catalogo={catalogo} />
       );

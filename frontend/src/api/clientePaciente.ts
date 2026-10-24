@@ -1,5 +1,5 @@
 import { ErrorApi, pedirJson, pedirSinRespuesta } from "./http";
-import type { ErrorCampo, EstadoPrefactura, MotivoRechazoPago, MotivoRechazoPdf, Pago, PrefacturaPaciente, TipoSoporte } from "./tipos";
+import type { ErrorCampo, EstadoPrefactura, IntencionPago, MotivoRechazoPago, MotivoRechazoPdf, Pago, PrefacturaPaciente, TipoSoporte } from "./tipos";
 
 export type ResultadoPago = { readonly tipo: "pagado"; readonly pago: Pago } | { readonly tipo: "rechazado"; readonly motivo: MotivoRechazoPago };
 
@@ -20,7 +20,9 @@ export interface ClientePaciente {
   iniciarSesion(identificacion: string, codigoAcceso: string): Promise<string | null>;
   prefactura(token: string, senal: AbortSignal): Promise<PrefacturaPaciente>;
   subirSoporte(token: string, tipo: TipoSoporte, archivo: Blob): Promise<ResultadoCarga>;
-  /** `medio` es el token que entrega la pasarela en el navegador; el número de la tarjeta nunca llega al backend. */
+  /** Cada llamada trae una referencia de pago nueva: Wompi no admite repetirla. */
+  prepararCopago(token: string): Promise<IntencionPago>;
+  /** `medio` es el ID de la transacción de Wompi o el token de la tarjeta de prueba; nunca el número de la tarjeta. */
   pagarCopago(token: string, medio: string): Promise<ResultadoPago>;
   radicar(token: string, datos: Readonly<Record<string, string>>): Promise<ResultadoRadicacion>;
 }
@@ -47,6 +49,7 @@ export function clientePacienteHttp(urlApi: string): ClientePaciente {
         throw error;
       }
     },
+    prepararCopago: (token) => pedirJson(url("/copago/checkout"), { metodo: "POST", token }),
     async pagarCopago(token, medio) {
       try {
         return { tipo: "pagado", pago: await pedirJson<Pago>(url("/copago"), { metodo: "POST", token, json: { token: medio } }) };

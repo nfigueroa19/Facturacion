@@ -76,6 +76,7 @@ export function clientePaciente(cambios: Partial<ClientePaciente> = {}): Cliente
     iniciarSesion: vi.fn(() => Promise.resolve("token")),
     prefactura: vi.fn(() => Promise.resolve(PREFACTURA)),
     subirSoporte: vi.fn(() => Promise.resolve({ tipo: "cargado" as const })),
+    prepararCopago: vi.fn(() => Promise.resolve({ pasarela: "SIMULADA" as const })),
     pagarCopago: vi.fn(() => Promise.resolve({ tipo: "pagado" as const, pago: { referencia: "SIM-1", valorPesos: 5000, fecha: "2026-10-22T13:00:00Z" } })),
     radicar: vi.fn(() => Promise.resolve({ tipo: "radicada" as const, consecutivo: "PF-000001", estado: "EN_REVISION" as const })),
     ...cambios,
@@ -147,6 +148,7 @@ export function montar(opciones: { contenido?: ClienteContenido; clientes?: Part
     facturador: clienteFacturador(),
     personal: clientePersonal(),
     pruebas: clientePruebas(),
+    pasarela: { abrir: vi.fn(() => Promise.resolve()) },
     ...opciones.clientes,
   };
   return render(

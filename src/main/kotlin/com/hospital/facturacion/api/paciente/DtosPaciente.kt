@@ -5,6 +5,7 @@ import com.hospital.facturacion.api.prefactura.CitaDto
 import com.hospital.facturacion.api.prefactura.NovedadDto
 import com.hospital.facturacion.api.prefactura.PagoDto
 import com.hospital.facturacion.api.prefactura.aDto
+import com.hospital.facturacion.domain.copago.IntencionPago
 import com.hospital.facturacion.domain.formulario.ErrorCampo
 import com.hospital.facturacion.domain.formulario.FormularioPrefactura
 import com.hospital.facturacion.domain.prefactura.EstadoPrefactura
@@ -38,9 +39,18 @@ data class PrefacturaPacienteDto(
     val tamanoMaximoSoporteBytes: Int,
 )
 
-/** Token del medio de pago que la pasarela entregó al navegador; nunca el número de la tarjeta. */
+/** ID de la transacción del checkout o token de la tarjeta de prueba; nunca el número de la tarjeta. */
 @Serializable
 data class MedioPagoDto(val token: String)
+
+enum class TipoPasarelaDto { SIMULADA, CHECKOUT }
+
+/** `checkout` solo llega con la pasarela CHECKOUT: los parámetros firmados para abrir el widget en el navegador. */
+@Serializable
+data class IntencionPagoDto(val pasarela: TipoPasarelaDto, val checkout: CheckoutDto? = null)
+
+@Serializable
+data class CheckoutDto(val llavePublica: String, val referencia: String, val montoCentavos: Long, val moneda: String, val firma: String)
 
 @Serializable
 data class DatosPacienteDto(val datos: Map<String, String>)
@@ -62,3 +72,8 @@ fun PrefacturaPaciente.aDto(formulario: FormularioPrefactura, tamanoMaximoSoport
 
 private fun SolicitudPrefactura.aDtoPaciente() =
     SolicitudPacienteDto(consecutivo.valor, estado, fechaEnvio.toString(), datos.valores, novedades.map { it.aDto() })
+
+fun IntencionPago.aDto() = when (this) {
+    IntencionPago.Simulada -> IntencionPagoDto(TipoPasarelaDto.SIMULADA)
+    is IntencionPago.Checkout -> IntencionPagoDto(TipoPasarelaDto.CHECKOUT, CheckoutDto(llavePublica, referencia, montoCentavos, moneda, firma))
+}

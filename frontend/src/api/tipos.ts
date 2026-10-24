@@ -49,6 +49,18 @@ export interface Pago {
   readonly fecha: string;
 }
 
+/** Parámetros firmados por el backend para abrir el widget de Wompi; el secreto de integridad nunca llega aquí. */
+export interface CheckoutPago {
+  readonly llavePublica: string;
+  readonly referencia: string;
+  readonly montoCentavos: number;
+  readonly moneda: string;
+  readonly firma: string;
+}
+
+/** SIMULADA mientras el backend no tenga las llaves de Wompi; CHECKOUT abre el widget de Wompi sandbox. */
+export type IntencionPago = { readonly pasarela: "SIMULADA" } | { readonly pasarela: "CHECKOUT"; readonly checkout: CheckoutPago };
+
 export interface Novedad {
   readonly descripcion: string;
   readonly fecha: string;
@@ -124,7 +136,7 @@ export type EstadoEnvio = "ENVIADO" | "SIMULADO" | "FALLIDO";
 
 export interface Comunicacion {
   readonly cita: string;
-  readonly motivo: "CITA_ASIGNADA" | "NOVEDAD_REGISTRADA";
+  readonly motivo: "CITA_ASIGNADA" | "SOLICITUD_RADICADA" | "NOVEDAD_REGISTRADA";
   readonly destino: string;
   readonly texto: string;
   readonly estado: EstadoEnvio;

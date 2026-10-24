@@ -8,8 +8,9 @@ import java.time.Instant
 data class PagoCopago(val referencia: String, val copago: Copago, val fecha: Instant)
 
 /**
- * Medio de pago tokenizado por la pasarela en el navegador. El número de la tarjeta nunca llega al backend:
- * así funcionan Wompi y las demás pasarelas evaluadas, y así se mantiene el alcance PCI mínimo.
+ * Lo que el navegador entrega después de cobrar: el ID de la transacción que creó el checkout de la pasarela o, con la
+ * pasarela de pruebas, el token de la tarjeta de prueba. El número de la tarjeta nunca llega al backend: así funcionan
+ * Wompi y las demás pasarelas evaluadas, y así se mantiene el alcance PCI mínimo.
  */
 @JvmInline
 value class TokenPago private constructor(val valor: String) {
@@ -28,7 +29,7 @@ sealed interface ResultadoPasarela {
     data class Rechazado(val motivo: MotivoRechazoPago) : ResultadoPasarela
 }
 
-/** Pasarela de pagos del hospital. El proveedor y el convenio siguen abiertos (P-14). */
+/** Verifica o ejecuta el cobro en la pasarela del hospital. El proveedor y el convenio siguen abiertos (P-14). */
 fun interface PasarelaPagos {
     fun cobrar(cita: Cita, copago: Copago, medio: TokenPago): ResultadoPasarela
 }
