@@ -78,7 +78,7 @@ export function PagoWompi({ valor, checkout, texto, preparar, pagar, pasarela }:
         <div className="flex flex-wrap gap-x-6 gap-y-2">
           {MEDIOS.map((opcion) => (
             <Radio key={opcion} value={opcion} className="min-h-11">
-              <Radio.Content className="text-base text-ink">
+              <Radio.Content className="min-h-11 items-center text-base text-ink">
                 <Radio.Control>
                   <Radio.Indicator />
                 </Radio.Control>

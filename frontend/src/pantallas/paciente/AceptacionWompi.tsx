@@ -35,7 +35,7 @@ export function AceptacionWompi({ contratos, aceptacion, faltaAceptar, texto, on
             onChange={(marcada) => onCambiar({ ...aceptacion, [clave]: marcada })}
             className="min-h-11"
           >
-            <Checkbox.Content className="text-base text-ink">
+            <Checkbox.Content className="min-h-11 items-center text-base text-ink">
               <Checkbox.Control>
                 <Checkbox.Indicator />
               </Checkbox.Control>
