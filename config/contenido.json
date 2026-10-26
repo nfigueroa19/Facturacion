@@ -345,7 +345,7 @@
     "pruebas.restablecer.cancelar": "Cancelar",
     "pruebas.restablecer.listo": "Listo: {escenarios} casos quedaron en su estado inicial.",
     "pruebas.restablecer.error": "No se pudieron restablecer los datos. Revise la conexión e intente de nuevo.",
-    "sms.CITA_ASIGNADA": "HSLV: su cita de {especialidad} con {medico} es el {fecha}. Adelante la prefactura en facturacion.hosusana.com con su identificación y el ID de acceso {codigo}.",
+    "sms.CITA_ASIGNADA": "HSLV: cita de {especialidad} con {medico}, {fecha}. Prefactura en facturacion.hosusana.com, ID de acceso {codigo}.",
     "sms.SOLICITUD_RADICADA": "HSLV: recibimos su solicitud de prefactura con el consecutivo {consecutivo}. Si hay datos o documentos por corregir, le avisaremos por este medio.",
     "sms.NOVEDAD_REGISTRADA": "HSLV: su solicitud de prefactura {consecutivo} tiene datos o documentos por corregir. Ingrese a facturacion.hosusana.com para revisarlos."
   },
